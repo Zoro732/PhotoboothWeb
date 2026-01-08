@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photobooth</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <h1 id="titleText">Marion <br>&amp;Charles</h1>
+    <div id="container">
+        <button id="openStreamBtn">
+            <img src="assets/camera.svg" alt="Ouvrir le stream">
+        </button>
+        <p id="instructionText">Appuyer pour prendre une photo</p>
+        <div id="streamContainer" style="display:none;">
+            <button id="closeStreamBtn">
+                <img src="assets/x.svg" alt="Fermer">
+            </button>
+            <div id="streamWrapper">
+                <img src="http://192.168.1.22:8080/stream" id="stream">
+            </div>
+            <button id="shootBtn">
+                <img src="assets/take_picture.svg" alt="Prendre une photo">
+            </button>
+            <p id="status"></p>
+        </div>
+    </div>
+
+    <img src="assets/logo_white.png" alt="Logo" id="logo">
+
+    <script>
+        document.getElementById('openStreamBtn').addEventListener('click', function() {
+            document.getElementById('streamContainer').style.display = 'flex';
+            this.style.display = 'none';
+        });
+
+        document.getElementById('closeStreamBtn').addEventListener('click', function() {
+            const container = document.getElementById('streamContainer');
+            container.classList.add('closing');
+            setTimeout(() => {
+                container.style.display = 'none';
+                container.classList.remove('closing');
+                document.getElementById('openStreamBtn').style.display = 'flex';
+            }, 400);
+        });
+
+        document.getElementById('shootBtn').addEventListener('click', function() {
+            // Affiche un message
+            document.getElementById('status').textContent = "Prise de photo...";
+
+            // Envoi AJAX
+            fetch('command.php', { method: 'POST' })
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('status').textContent = "Photo prise !";
+                })
+                .catch(err => {
+                    document.getElementById('status').textContent = "Erreur : " + err;
+                });
+        });
+    </script>
+    
+</body>
+</html>
+
+
