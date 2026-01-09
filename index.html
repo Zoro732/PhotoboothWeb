@@ -8,10 +8,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="index.css">
+    <script src="script.js"></script>
 </head>
 <body>
-    <h1 id="titleText">Marion <br>&amp;Charles</h1>
-    <div id="container">
+    <div id="main">
+        <div id="backgroundWrapper">
+            <img src="assets/mainpage.jpg" alt="Background" id="background">
+        </div>
+        <h1 id="titleText">Marion<br>&amp;Charles</h1>
         <button id="openStreamBtn">
             <img src="assets/camera.svg" alt="Ouvrir le stream">
         </button>
@@ -28,10 +32,12 @@
             </button>
             <p id="status"></p>
         </div>
+        <img src="assets/logo_white.png" alt="Logo" id="logo">
     </div>
 
-    <img src="assets/logo_white.png" alt="Logo" id="logo">
-
+    <div id="gallery">
+        <div id="galleryGrid"></div>
+    </div>
     <script>
         document.getElementById('openStreamBtn').addEventListener('click', function() {
             document.getElementById('streamContainer').style.display = 'flex';
