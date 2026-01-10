@@ -1,3 +1,53 @@
+#lightboxOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 60;
+    opacity: 0;
+    transition: opacity 0.25s ease-in-out;
+}
+
+#lightboxOverlay.show {
+    opacity: 1;
+}
+
+#lightboxClose {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    width: 48px;
+    height: 48px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(53, 53, 53, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 61;
+    cursor: pointer;
+}
+
+#lightboxClose img {
+    width: 24px;
+    height: 24px;
+    filter: invert(1) brightness(1.2);
+}
+
+.zooming-image {
+    position: fixed;
+    object-fit: contain;
+    background: transparent;
+    border-radius: 12px;
+    z-index: 60;
+    transition: left 300ms ease, top 300ms ease, width 300ms ease, height 300ms ease;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.35);
+}
+
+body.lightbox-open {
+    overflow: hidden;
+}
 body {
     margin: 0;
     padding: 0;
@@ -209,10 +259,6 @@ body.gallery-open #gallery {
     background-color: #555555;
 }
 
-#openStreamBtn:active img {
-    filter: invert(1) brightness(1);
-    background-color: white;
-}
 
 #buttonGroup {
     display: flex;
@@ -221,12 +267,13 @@ body.gallery-open #gallery {
 }
 
 #logo {
-    position: absolute;
+    position: fixed;
     bottom: 20px;
     right: 20px;
     width: 80px;
     height: auto;
-    z-index: 5;
+    z-index: 40; /* au-dessus du stream et des overlays */
+    pointer-events: none; /* ne bloque pas les clics */
 }
 
 #streamContainer {
@@ -353,19 +400,10 @@ body.gallery-open #gallery {
     background-color: #dc3545;
 }
 
-#rejectPhotoBtn:hover {
-    background-color: #c82333;
-    transform: scale(1.1);
-}
-
 #acceptPhotoBtn {
     background-color: #28a745;
 }
 
-#acceptPhotoBtn:hover {
-    background-color: #218838;
-    transform: scale(1.1);
-}
 
 #rejectPhotoBtn img,
 #acceptPhotoBtn img {
@@ -375,13 +413,6 @@ body.gallery-open #gallery {
     transition: filter 0.2s;
 }
 
-#rejectPhotoBtn:hover img {
-    filter: invert(1) brightness(1);
-}
-
-#acceptPhotoBtn:hover img {
-    filter: invert(1) brightness(1);
-}
 
 @keyframes photoFlyAway {
     0% {
@@ -574,4 +605,11 @@ body.photo-preview #photoActions {
         transform: translate(-50%, -50%) scale(0);
         opacity: 0;
     }
+}
+
+@font-face {
+    font-family: 'Yuji Syuku';
+    src: url('assets/fonts/YujiSyuku-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
 }

@@ -399,5 +399,107 @@ function addImagesToGallery(urls) {
         
         // Observer l'image
         imageObserver.observe(img);
+
+        // Ouvrir la lightbox sur clic
+        img.addEventListener('click', function() {
+            // S'assurer que l'image a une source
+            if (!img.src) {
+                const src = img.getAttribute('data-src');
+                if (src) img.src = src;
+            }
+            openLightbox(img);
+        });
     });
+}
+
+// ====== LIGHTBOX (zoom animé depuis la grille) ======
+function openLightbox(img) {
+    const overlay = document.getElementById('lightboxOverlay');
+    const closeBtn = document.getElementById('lightboxClose');
+    if (!overlay || !closeBtn) return;
+
+    const rect = img.getBoundingClientRect();
+    
+    // Créer une image temporaire pour obtenir les dimensions réelles
+    const tempImg = new Image();
+    tempImg.onload = () => {
+        const clone = img.cloneNode();
+        clone.classList.add('zooming-image');
+        clone.removeAttribute('data-src');
+        clone.style.left = rect.left + 'px';
+        clone.style.top = rect.top + 'px';
+        clone.style.width = rect.width + 'px';
+        clone.style.height = rect.height + 'px';
+
+        // Utiliser le ratio RÉEL de l'image (pas celui de la grille carrée)
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const realRatio = tempImg.naturalWidth / tempImg.naturalHeight;
+        
+        let targetW = Math.min(vw * 0.9, vh * 0.9 * realRatio);
+        let targetH = targetW / realRatio;
+        if (targetH > vh * 0.9) {
+            targetH = vh * 0.9;
+            targetW = targetH * realRatio;
+        }
+        const targetLeft = (vw - targetW) / 2;
+        const targetTop = (vh - targetH) / 2;
+
+        // Stocker les coordonnées d'origine pour l'animation inverse
+        clone.dataset.origLeft = String(rect.left);
+        clone.dataset.origTop = String(rect.top);
+        clone.dataset.origWidth = String(rect.width);
+        clone.dataset.origHeight = String(rect.height);
+
+        // Afficher l'overlay et injecter le clone
+        overlay.style.display = 'block';
+        overlay.appendChild(clone);
+        document.body.classList.add('lightbox-open');
+        requestAnimationFrame(() => overlay.classList.add('show'));
+
+        // Lancer l'animation vers le centre
+        requestAnimationFrame(() => {
+            clone.style.left = targetLeft + 'px';
+            clone.style.top = targetTop + 'px';
+            clone.style.width = targetW + 'px';
+            clone.style.height = targetH + 'px';
+        });
+
+        // Fermeture via bouton
+        closeBtn.onclick = () => closeLightbox();
+        // Fermeture via clic overlay (hors image)
+        overlay.onclick = (e) => {
+            if (e.target === overlay) closeLightbox();
+        };
+    };
+    
+    tempImg.src = img.src || img.getAttribute('data-src');
+}
+
+function closeLightbox() {
+    const overlay = document.getElementById('lightboxOverlay');
+    if (!overlay) return;
+    const clone = overlay.querySelector('.zooming-image');
+    if (!clone) {
+        overlay.classList.remove('show');
+        overlay.style.display = 'none';
+        document.body.classList.remove('lightbox-open');
+        return;
+    }
+
+    // Animer retour vers la position d'origine
+    clone.style.left = clone.dataset.origLeft + 'px';
+    clone.style.top = clone.dataset.origTop + 'px';
+    clone.style.width = clone.dataset.origWidth + 'px';
+    clone.style.height = clone.dataset.origHeight + 'px';
+
+    // Après la transition, nettoyer
+    const onEnd = () => {
+        clone.removeEventListener('transitionend', onEnd);
+        overlay.classList.remove('show');
+        overlay.style.display = 'none';
+        if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
+        document.body.classList.remove('lightbox-open');
+    };
+    clone.addEventListener('transitionend', onEnd);
 }
