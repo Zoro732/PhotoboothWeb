@@ -11,6 +11,19 @@
     <script src="script.js"></script>
 </head>
 <body>
+    <!-- <div id ="cursor"></div>
+    <div id ="cursor2"></div> -->
+    <div id="highlandbar">
+        <div id="selector"></div>
+        <div id="mainPageBtn">
+            <img src="assets/camera.svg">
+            <p>Accueil</p>
+        </div>
+        <div id="galleryBtn" class="selectorBtn">
+            <img src="assets/image.svg">
+            <p>Galerie</p>
+        </div>
+    </div>
     <div id="main">
         <div id="backgroundWrapper">
             <img src="assets/mainpage.jpg" alt="Background" id="background">
@@ -25,50 +38,35 @@
                 <img src="assets/x.svg" alt="Fermer">
             </button>
             <div id="streamWrapper">
-                <img src="http://192.168.1.22:8080/stream" id="stream">
+                <img src="http://192.168.1.22:8080/stream" id="stream" crossorigin="anonymous">
+                <div id="flashOverlay"></div>
+                <canvas id="captureCanvas" style="display:none;"></canvas>
+                <div id="photoThumbnail"></div>
             </div>
-            <button id="shootBtn">
-                <img src="assets/take_picture.svg" alt="Prendre une photo">
-            </button>
+        
             <p id="status"></p>
         </div>
+        
+        <button id="shootBtn">
+            <img src="assets/take_picture.svg" alt="Prendre une photo">
+        </button>
+        <div id="photoActions">
+            <button id="rejectPhotoBtn">
+                <img src="assets/x.svg" alt="Refuser">
+            </button>
+            <button id="acceptPhotoBtn">
+                <img src="assets/check.svg" alt="Valider">
+            </button>
+        </div>
+
         <img src="assets/logo_white.png" alt="Logo" id="logo">
     </div>
 
     <div id="gallery">
         <div id="galleryGrid"></div>
     </div>
-    <script>
-        document.getElementById('openStreamBtn').addEventListener('click', function() {
-            document.getElementById('streamContainer').style.display = 'flex';
-            this.style.display = 'none';
-        });
+    
 
-        document.getElementById('closeStreamBtn').addEventListener('click', function() {
-            const container = document.getElementById('streamContainer');
-            container.classList.add('closing');
-            setTimeout(() => {
-                container.style.display = 'none';
-                container.classList.remove('closing');
-                document.getElementById('openStreamBtn').style.display = 'flex';
-            }, 400);
-        });
-
-        document.getElementById('shootBtn').addEventListener('click', function() {
-            // Affiche un message
-            document.getElementById('status').textContent = "Prise de photo...";
-
-            // Envoi AJAX
-            fetch('command.php', { method: 'POST' })
-                .then(response => response.text())
-                .then(data => {
-                    document.getElementById('status').textContent = "Photo prise !";
-                })
-                .catch(err => {
-                    document.getElementById('status').textContent = "Erreur : " + err;
-                });
-        });
-    </script>
     
 </body>
 </html>
