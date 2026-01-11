@@ -41,8 +41,6 @@
                 <canvas id="captureCanvas" style="display:none;"></canvas>
                 <div id="photoThumbnail"></div>
             </div>
-        
-            <p id="status"></p>
         </div>
         
         <button id="shootBtn">
@@ -68,10 +66,30 @@
         <button id="lightboxClose" aria-label="Fermer la photo">
             <img src="assets/x.svg" alt="Fermer">
         </button>
+        <button id="lightboxPrint" aria-label="Imprimer la photo">
+            <img src="assets/printer.svg" alt="Imprimer">
+        </button>
+        <div id="printQuantityPanel" style="display:none;">
+            <div id="printValidateWrapper">
+                <button id="printValidate" aria-label="Valider l'impression">
+                    <img src="assets/check.svg" alt="Valider">
+                </button>
+            </div>
+            <div id="printQuantityControls">
+                <button id="printIncrement" aria-label="Augmenter la quantité">
+                    <span>+</span>
+                </button>
+                <div id="printQuantityDisplay">1</div>
+                <button id="printDecrement" aria-label="Diminuer la quantité">
+                    <span>−</span>
+                </button>
+            </div>
+        </div>
         <!-- L'image clonée sera injectée ici via JS -->
     </div>
     
-
+    <!-- Notification d'impression -->
+    <div id="printNotification"></div>
     
 </body>
 </html>

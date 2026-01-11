@@ -155,17 +155,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (statusEl) statusEl.textContent = "Erreur : " + err.message;
                 });
             
-            // Après un délai, fermer le preview
+            // Ajouter l'animation de disparition
+            thumbnail.classList.add('animate');
+            
+            // Après l'animation, fermer le preview
             setTimeout(() => {
                 document.body.classList.remove('photo-preview');
-                thumbnail.classList.remove('show');
+                thumbnail.classList.remove('show', 'animate');
                 const bgImage = thumbnail.style.backgroundImage;
                 if (bgImage.includes('blob:')) {
                     const url = bgImage.match(/url\("?(blob:[^")]+)"?\)/)?.[1];
                     if (url) URL.revokeObjectURL(url);
                 }
                 thumbnail.style.backgroundImage = '';
-            }, 500);
+            }, 1000);
         });
     }
 });
@@ -179,6 +182,10 @@ document.addEventListener('touchstart', function(event) {
 
 document.addEventListener('touchend', function(event) {
     if (event.changedTouches.length > 0) {
+        // Bloquer le swipe si la lightbox est ouverte
+        if (document.body.classList.contains('lightbox-open')) {
+            return;
+        }
         touchendX = event.changedTouches[0].clientX;
         touchendY = event.changedTouches[0].clientY;
         handleSwipe();
@@ -186,8 +193,8 @@ document.addEventListener('touchend', function(event) {
 }, { passive: false });
 
 function handleSwipe() {
-    // Ne pas traiter le swipe si le stream est ouvert
-    if (document.body.classList.contains('streaming')) {
+    // Ne pas traiter le swipe si le stream est ouvert ou si la lightbox est active
+    if (document.body.classList.contains('streaming') || document.body.classList.contains('lightbox-open')) {
         return;
     }
     
@@ -208,8 +215,8 @@ function handleSwipe() {
 }
 
 document.addEventListener('keydown', function(event) {
-    // Ne pas traiter les flèches si le stream est ouvert
-    if (document.body.classList.contains('streaming')) {
+    // Ne pas traiter les flèches si le stream est ouvert ou si la lightbox est active
+    if (document.body.classList.contains('streaming') || document.body.classList.contains('lightbox-open')) {
         return;
     }
     
@@ -471,6 +478,78 @@ function openLightbox(img) {
         overlay.onclick = (e) => {
             if (e.target === overlay) closeLightbox();
         };
+        
+        // Gestion du bouton d'impression et quantité
+        const printBtn = document.getElementById('lightboxPrint');
+        const printPanel = document.getElementById('printQuantityPanel');
+        let printQuantity = 1;
+        
+        if (printBtn && printPanel) {
+            printBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (printPanel.style.display === 'none') {
+                    printPanel.style.display = 'flex';
+                } else {
+                    printPanel.style.display = 'none';
+                }
+            };
+            
+            const incrementBtn = document.getElementById('printIncrement');
+            const decrementBtn = document.getElementById('printDecrement');
+            const quantityDisplay = document.getElementById('printQuantityDisplay');
+            const validateBtn = document.getElementById('printValidate');
+            
+            const updateButtonStates = () => {
+                quantityDisplay.textContent = String(printQuantity);
+                incrementBtn.disabled = printQuantity >= 3;
+                decrementBtn.disabled = printQuantity <= 1;
+            };
+            
+            incrementBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (printQuantity < 3) {
+                    printQuantity++;
+                    updateButtonStates();
+                }
+            };
+            
+            decrementBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (printQuantity > 1) {
+                    printQuantity--;
+                    updateButtonStates();
+                }
+            };
+            
+            if (validateBtn) {
+                validateBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    console.log(`Impression de ${printQuantity} copie(s)`);
+                    
+                    // Afficher la notification
+                    const notification = document.getElementById('printNotification');
+                    if (notification) {
+                        notification.textContent = `${printQuantity} impression${printQuantity > 1 ? 's' : ''} lancée${printQuantity > 1 ? 's' : ''} !`;
+                        notification.classList.remove('hide');
+                        notification.classList.add('show');
+                        
+                        // Masquer la notification après 3 secondes
+                        setTimeout(() => {
+                            notification.classList.remove('show');
+                            notification.classList.add('hide');
+                        }, 3000);
+                    }
+                    
+                    // TODO: Ajouter ici la logique d'impression
+                    // Par exemple : envoyer une requête au serveur avec l'image et la quantité
+                    
+                    // Fermer le panel après validation
+                    printPanel.style.display = 'none';
+                };
+            }
+            
+            updateButtonStates();
+        }
     };
     
     tempImg.src = img.src || img.getAttribute('data-src');
@@ -478,7 +557,12 @@ function openLightbox(img) {
 
 function closeLightbox() {
     const overlay = document.getElementById('lightboxOverlay');
+    const printPanel = document.getElementById('printQuantityPanel');
     if (!overlay) return;
+    
+    // Fermer le panel d'impression
+    if (printPanel) printPanel.style.display = 'none';
+    
     const clone = overlay.querySelector('.zooming-image');
     if (!clone) {
         overlay.classList.remove('show');
