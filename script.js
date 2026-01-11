@@ -2,6 +2,7 @@ var touchstartX = 0;
 var touchstartY = 0;
 var touchendX = 0;
 var touchendY = 0;
+let currentLightboxPhoto = null; // chemin normalisé de l'image ouverte en lightbox
 
 // ========== GESTION DU STREAM ET CAPTURE ==========
 document.addEventListener('DOMContentLoaded', () => {
@@ -54,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const stream = document.getElementById('stream');
             const canvas = document.getElementById('captureCanvas');
             const thumbnail = document.getElementById('photoThumbnail');
+            const statusEl = document.getElementById('status');
             
             if (!stream || !canvas || !thumbnail || !flashOverlay) {
                 console.error('Éléments manquants pour la capture');
@@ -97,6 +99,22 @@ document.addEventListener('DOMContentLoaded', () => {
                         thumbnail.classList.add('show');
                         // Activer le mode preview avec morphing
                         document.body.classList.add('photo-preview');
+                        // Déclencher la prise de vue sur le serveur (RPI)
+                        fetch('command.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'capture' })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (statusEl) {
+                                statusEl.textContent = data.ok ? 'Photo prise !' : ('Erreur : ' + (data.error || 'Inconnue'));
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Erreur capture serveur:', err);
+                            if (statusEl) statusEl.textContent = 'Erreur : ' + err.message;
+                        });
                     }, 100);
                 }, 150);
                 
@@ -145,10 +163,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (statusEl) statusEl.textContent = "Prise de photo...";
 
             // Envoi AJAX
-            fetch('command.php', { method: 'POST' })
-                .then(response => response.text())
+            fetch('command.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'capture' })
+            })
+                .then(response => response.json())
                 .then(data => {
-                    if (statusEl) statusEl.textContent = "Photo prise !";
+                    if (statusEl) {
+                        statusEl.textContent = data.ok ? "Photo prise !" : ("Erreur : " + (data.error || 'Inconnue'));
+                    }
                 })
                 .catch(err => {
                     console.error('Erreur commande:', err);
@@ -425,6 +449,11 @@ function openLightbox(img) {
     const closeBtn = document.getElementById('lightboxClose');
     if (!overlay || !closeBtn) return;
 
+    // Conserver le chemin de l'image affichée pour l'impression
+    const rawSrc = img.src || img.getAttribute('data-src');
+    currentLightboxPhoto = normalizePhotoPath(rawSrc);
+    overlay.dataset.photo = currentLightboxPhoto;
+
     const rect = img.getBoundingClientRect();
     
     // Créer une image temporaire pour obtenir les dimensions réelles
@@ -524,27 +553,63 @@ function openLightbox(img) {
             if (validateBtn) {
                 validateBtn.onclick = (e) => {
                     e.stopPropagation();
-                    console.log(`Impression de ${printQuantity} copie(s)`);
-                    
-                    // Afficher la notification
-                    const notification = document.getElementById('printNotification');
-                    if (notification) {
-                        notification.textContent = `${printQuantity} impression${printQuantity > 1 ? 's' : ''} lancée${printQuantity > 1 ? 's' : ''} !`;
-                        notification.classList.remove('hide');
-                        notification.classList.add('show');
-                        
-                        // Masquer la notification après 3 secondes
-                        setTimeout(() => {
-                            notification.classList.remove('show');
-                            notification.classList.add('hide');
-                        }, 3000);
+                    if (!currentLightboxPhoto) {
+                        console.error('Aucune photo sélectionnée pour impression');
+                        return;
                     }
-                    
-                    // TODO: Ajouter ici la logique d'impression
-                    // Par exemple : envoyer une requête au serveur avec l'image et la quantité
-                    
-                    // Fermer le panel après validation
-                    printPanel.style.display = 'none';
+
+                    // Appel serveur pour lancer l'impression via print_photo.sh
+                    fetch('command.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'print',
+                            photo: currentLightboxPhoto,
+                            copies: printQuantity
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        const notification = document.getElementById('printNotification');
+                        if (data.ok) {
+                            if (notification) {
+                                notification.textContent = `${printQuantity} impression${printQuantity > 1 ? 's' : ''} lancée${printQuantity > 1 ? 's' : ''} !`;
+                                notification.classList.remove('hide');
+                                notification.classList.add('show');
+                                setTimeout(() => {
+                                    notification.classList.remove('show');
+                                    notification.classList.add('hide');
+                                }, 3000);
+                            }
+                        } else {
+                            console.error('Erreur impression:', data.error || 'Inconnue');
+                            if (notification) {
+                                notification.textContent = `Erreur impression: ${data.error || 'Inconnue'}`;
+                                notification.classList.remove('hide');
+                                notification.classList.add('show');
+                                setTimeout(() => {
+                                    notification.classList.remove('show');
+                                    notification.classList.add('hide');
+                                }, 3000);
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Erreur impression:', err);
+                        const notification = document.getElementById('printNotification');
+                        if (notification) {
+                            notification.textContent = `Erreur impression: ${err.message}`;
+                            notification.classList.remove('hide');
+                            notification.classList.add('show');
+                            setTimeout(() => {
+                                notification.classList.remove('show');
+                                notification.classList.add('hide');
+                            }, 3000);
+                        }
+                    })
+                    .finally(() => {
+                        printPanel.style.display = 'none';
+                    });
                 };
             }
             
@@ -562,6 +627,8 @@ function closeLightbox() {
     
     // Fermer le panel d'impression
     if (printPanel) printPanel.style.display = 'none';
+    currentLightboxPhoto = null;
+    delete overlay.dataset.photo;
     
     const clone = overlay.querySelector('.zooming-image');
     if (!clone) {
@@ -586,4 +653,17 @@ function closeLightbox() {
         document.body.classList.remove('lightbox-open');
     };
     clone.addEventListener('transitionend', onEnd);
+}
+
+// Normalise un src d'image pour obtenir un chemin relatif sans query (photos/...)
+function normalizePhotoPath(src) {
+    if (!src) return '';
+    try {
+        const url = new URL(src, window.location.href);
+        const cleanPath = url.pathname.replace(/^\/+/, '');
+        return cleanPath;
+    } catch (e) {
+        // fallback si URL invalide
+        return src.split('?')[0];
+    }
 }
