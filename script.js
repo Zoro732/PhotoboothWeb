@@ -99,22 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         thumbnail.classList.add('show');
                         // Activer le mode preview avec morphing
                         document.body.classList.add('photo-preview');
-                        // Déclencher la prise de vue sur le serveur (RPI)
-                        fetch('command.php', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'capture' })
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (statusEl) {
-                                statusEl.textContent = data.ok ? 'Photo prise !' : ('Erreur : ' + (data.error || 'Inconnue'));
-                            }
-                        })
-                        .catch(err => {
-                            console.error('Erreur capture serveur:', err);
-                            if (statusEl) statusEl.textContent = 'Erreur : ' + err.message;
-                        });
                     }, 100);
                 }, 150);
                 
@@ -160,9 +144,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!thumbnail) return;
             
             // Afficher un message
-            if (statusEl) statusEl.textContent = "Prise de photo...";
+            if (statusEl) statusEl.textContent = "Envoi de la photo...";
 
-            // Envoi AJAX
+            // Déclencher la prise de vue sur le serveur (RPI)
             fetch('command.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -175,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 })
                 .catch(err => {
-                    console.error('Erreur commande:', err);
+                    console.error('Erreur capture:', err);
                     if (statusEl) statusEl.textContent = "Erreur : " + err.message;
                 });
             

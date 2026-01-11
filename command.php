@@ -16,7 +16,7 @@ if (!is_array($input)) {
 $action = $input['action'] ?? 'capture';
 
 if ($action === 'capture') {
-    $cmd = 'gphoto2 --capture-image-and-download --filename=/var/www/html/photos/%d-%m-%Y_%H-%M-%S.%C';
+    $cmd = 'gphoto2 --capture-image-and-download --filename=/var/www/html/photos/%d-%m-%Y_%H-%M-%S_%f.%C';
     $output = shell_exec("sudo $cmd 2>&1");
     echo json_encode([
         'ok' => true,
