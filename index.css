@@ -796,3 +796,336 @@ body.photo-preview #photoActions {
     transform: translateX(-50%) translateY(0);
     opacity: 0;
 }
+
+/* ========== RESPONSIVE DESIGN ========== */
+
+/* Tablettes et petits écrans (portrait) */
+@media screen and (max-width: 1024px) {
+    #titleText {
+        font-size: 36px;
+    }
+    
+    #instructionText {
+        font-size: 1.3em;
+        padding-right: 10%;
+    }
+    
+    #streamWrapper {
+        width: 90vw;
+        height: calc(90vw * 9 / 16);
+        max-width: 960px;
+        max-height: 540px;
+    }
+    
+    #openStreamBtn {
+        width: 120px;
+        height: 120px;
+    }
+    
+    #openStreamBtn img {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .gallery-item {
+        flex: 0 0 calc(25% - 12px);
+        max-width: calc(25% - 12px);
+    }
+    
+    #lightboxPrint {
+        right: 3%;
+        width: 64px;
+        height: 64px;
+    }
+    
+    #lightboxPrint img {
+        width: 36px;
+        height: 36px;
+    }
+    
+    #printQuantityPanel {
+        right: calc(3% + 70px);
+    }
+}
+
+/* Smartphones (portrait) */
+@media screen and (max-width: 768px) {
+    #main {
+        padding: 0 5%;
+    }
+    
+    #titleText {
+        font-size: 28px;
+        text-align: center;
+    }
+    
+    #instructionText {
+        font-size: 1.1em;
+        padding-right: 0;
+        text-align: center;
+        white-space: normal;
+    }
+    
+    #openStreamBtn {
+        width: 100px;
+        height: 100px;
+        left: 50%;
+    }
+    
+    #openStreamBtn img {
+        width: 50px;
+        height: 50px;
+    }
+    
+    #streamWrapper {
+        width: 95vw;
+        height: calc(95vw * 9 / 16);
+    }
+    
+    #closeStreamBtn,
+    #lightboxClose {
+        width: 44px;
+        height: 44px;
+        top: 16px;
+        right: 16px;
+    }
+    
+    #closeStreamBtn img,
+    #lightboxClose img {
+        width: 22px;
+        height: 22px;
+    }
+    
+    #shootBtn {
+        width: 100px;
+        height: 100px;
+    }
+    
+    #shootBtn img {
+        width: 100px;
+        height: 100px;
+    }
+    
+    #photoActions {
+        gap: 30px;
+    }
+    
+    #rejectPhotoBtn,
+    #acceptPhotoBtn {
+        width: 70px;
+        height: 70px;
+    }
+    
+    #rejectPhotoBtn img,
+    #acceptPhotoBtn img {
+        width: 35px;
+        height: 35px;
+    }
+    
+    #highlandbar {
+        width: 25%;
+        height: 50px;
+    }
+    
+    #mainPageBtn p,
+    #galleryBtn p {
+        font-size: 14px;
+    }
+    
+    #mainPageBtn img,
+    #galleryBtn img {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .gallery-item {
+        flex: 0 0 calc(33.333% - 12px);
+        max-width: calc(33.333% - 12px);
+    }
+    
+    #logo {
+        width: 60px;
+        bottom: 15px;
+        right: 15px;
+    }
+    
+    #lightboxPrint {
+        right: 5%;
+        width: 56px;
+        height: 56px;
+    }
+    
+    #lightboxPrint img {
+        width: 32px;
+        height: 32px;
+    }
+    
+    #printQuantityPanel {
+        right: calc(5% + 62px);
+        gap: 8px;
+    }
+    
+    #printIncrement,
+    #printDecrement,
+    #printValidate {
+        width: 44px;
+        height: 44px;
+        font-size: 18px;
+    }
+    
+    #printValidate img {
+        width: 20px;
+        height: 20px;
+    }
+    
+    #printQuantityDisplay {
+        width: 44px;
+        height: 44px;
+        font-size: 16px;
+    }
+    
+    #printNotification {
+        font-size: 16px;
+        padding: 12px 24px;
+        max-width: 90%;
+    }
+}
+
+/* Petits smartphones */
+@media screen and (max-width: 480px) {
+    #titleText {
+        font-size: 24px;
+    }
+    
+    #instructionText {
+        font-size: 1em;
+    }
+    
+    #openStreamBtn {
+        width: 90px;
+        height: 90px;
+    }
+    
+    #openStreamBtn img {
+        width: 45px;
+        height: 45px;
+    }
+    
+    #highlandbar {
+        width: 30%;
+        height: 45px;
+    }
+    
+    #mainPageBtn p,
+    #galleryBtn p {
+        font-size: 12px;
+    }
+    
+    #mainPageBtn img,
+    #galleryBtn img {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .gallery-item {
+        flex: 0 0 calc(50% - 12px);
+        max-width: calc(50% - 12px);
+    }
+    
+    #galleryGrid {
+        padding: 15px;
+        gap: 10px;
+    }
+    
+    #shootBtn {
+        width: 90px;
+        height: 90px;
+    }
+    
+    #shootBtn img {
+        width: 90px;
+        height: 90px;
+    }
+    
+    #photoActions {
+        gap: 25px;
+    }
+    
+    #rejectPhotoBtn,
+    #acceptPhotoBtn {
+        width: 60px;
+        height: 60px;
+    }
+    
+    #rejectPhotoBtn img,
+    #acceptPhotoBtn img {
+        width: 30px;
+        height: 30px;
+    }
+    
+    #lightboxPrint {
+        right: 4%;
+        width: 48px;
+        height: 48px;
+    }
+    
+    #lightboxPrint img {
+        width: 28px;
+        height: 28px;
+    }
+    
+    #printQuantityPanel {
+        right: calc(4% + 54px);
+        gap: 6px;
+    }
+    
+    #printIncrement,
+    #printDecrement,
+    #printValidate {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    #printValidate img {
+        width: 18px;
+        height: 18px;
+    }
+    
+    #printQuantityDisplay {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
+    }
+    
+    #printNotification {
+        font-size: 14px;
+        padding: 10px 20px;
+    }
+}
+
+/* Orientation paysage sur mobile */
+@media screen and (max-height: 600px) and (orientation: landscape) {
+    #titleText {
+        font-size: 20px;
+    }
+    
+    #instructionText {
+        font-size: 0.9em;
+    }
+    
+    #openStreamBtn {
+        width: 80px;
+        height: 80px;
+    }
+    
+    #streamWrapper {
+        height: 80vh;
+        width: calc(80vh * 16 / 9);
+    }
+    
+    #highlandbar {
+        height: 40px;
+        bottom: 3%;
+    }
+}

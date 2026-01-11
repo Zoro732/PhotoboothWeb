@@ -3,6 +3,7 @@ var touchstartY = 0;
 var touchendX = 0;
 var touchendY = 0;
 let currentLightboxPhoto = null; // chemin normalisé de l'image ouverte en lightbox
+let tempPhotoFilename = null; // nom du fichier temporaire en cours de traitement
 
 // ========== GESTION DU STREAM ET CAPTURE ==========
 document.addEventListener('DOMContentLoaded', () => {
@@ -107,8 +108,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         })
                         .then(res => res.json())
                         .then(data => {
-                            if (statusEl) {
-                                statusEl.textContent = data.ok ? 'Photo prise !' : ('Erreur : ' + (data.error || 'Inconnue'));
+                            if (data.ok) {
+                                tempPhotoFilename = data.filename;
+                                if (statusEl) {
+                                    statusEl.textContent = 'Photo capturée, en attente de validation...';
+                                }
+                            } else {
+                                if (statusEl) {
+                                    statusEl.textContent = 'Erreur capture: ' + (data.error || 'Inconnue');
+                                }
                             }
                         })
                         .catch(err => {
@@ -133,6 +141,29 @@ document.addEventListener('DOMContentLoaded', () => {
     if (rejectPhotoBtn) {
         rejectPhotoBtn.addEventListener('click', function() {
             const thumbnail = document.getElementById('photoThumbnail');
+            const statusEl = document.getElementById('status');
+            
+            // Si une photo temp existe, la supprimer
+            if (tempPhotoFilename) {
+                fetch('command.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'reject',
+                        filename: tempPhotoFilename
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (statusEl) {
+                        statusEl.textContent = data.ok ? 'Photo rejetée' : ('Erreur: ' + data.error);
+                    }
+                })
+                .catch(err => console.error('Erreur reject:', err))
+                .finally(() => {
+                    tempPhotoFilename = null;
+                });
+            }
             
             // Retirer le mode preview
             document.body.classList.remove('photo-preview');
@@ -157,26 +188,32 @@ document.addEventListener('DOMContentLoaded', () => {
             const thumbnail = document.getElementById('photoThumbnail');
             const statusEl = document.getElementById('status');
             
-            if (!thumbnail) return;
+            if (!thumbnail || !tempPhotoFilename) return;
             
             // Afficher un message
-            if (statusEl) statusEl.textContent = "Prise de photo...";
+            if (statusEl) statusEl.textContent = "Validation de la photo...";
 
-            // Envoi AJAX
+            // Déplacer la photo du tmp vers photos
             fetch('command.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'capture' })
+                body: JSON.stringify({
+                    action: 'accept',
+                    filename: tempPhotoFilename
+                })
             })
                 .then(response => response.json())
                 .then(data => {
                     if (statusEl) {
-                        statusEl.textContent = data.ok ? "Photo prise !" : ("Erreur : " + (data.error || 'Inconnue'));
+                        statusEl.textContent = data.ok ? "Photo acceptée !" : ("Erreur : " + (data.error || 'Inconnue'));
                     }
                 })
                 .catch(err => {
-                    console.error('Erreur commande:', err);
+                    console.error('Erreur accept:', err);
                     if (statusEl) statusEl.textContent = "Erreur : " + err.message;
+                })
+                .finally(() => {
+                    tempPhotoFilename = null;
                 });
             
             // Ajouter l'animation de disparition

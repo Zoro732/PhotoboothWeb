@@ -16,12 +16,107 @@ if (!is_array($input)) {
 $action = $input['action'] ?? 'capture';
 
 if ($action === 'capture') {
-    $cmd = 'gphoto2 --capture-image-and-download --filename=/var/www/html/photos/%d-%m-%Y_%H-%M-%S_%f.%C';
-    $output = shell_exec("sudo $cmd 2>&1");
-    echo json_encode([
-        'ok' => true,
-        'message' => trim((string)$output)
-    ]);
+    // Créer le répertoire tmp s'il n'existe pas
+    $tmpDir = __DIR__ . DIRECTORY_SEPARATOR . 'tmp';
+    if (!is_dir($tmpDir)) {
+        mkdir($tmpDir, 0755, true);
+    }
+    
+    // Prendre la photo avec gphoto2 directement dans tmp
+    $filename = date('d-m-Y_H-i-s') . '.jpg';
+    $tmpPath = $tmpDir . DIRECTORY_SEPARATOR . $filename;
+    $cmd = sprintf(
+        'sudo gphoto2 --capture-image-and-download --filename=%s 2>&1',
+        escapeshellarg($tmpPath)
+    );
+    
+    $output = shell_exec($cmd);
+    
+    // Vérifier si le fichier a été créé
+    if (is_file($tmpPath)) {
+        echo json_encode([
+            'ok' => true,
+            'filename' => $filename,
+            'message' => 'Photo capturée'
+        ]);
+    } else {
+        http_response_code(500);
+        echo json_encode([
+            'ok' => false,
+            'error' => 'Impossible de capturer la photo',
+            'output' => trim((string)$output)
+        ]);
+    }
+    exit;
+}
+
+if ($action === 'accept') {
+    $filename = $input['filename'] ?? '';
+    
+    if (!$filename) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'error' => 'Filename manquant']);
+        exit;
+    }
+    
+    // Sécuriser le chemin (doit être dans tmp)
+    $tmpPath = realpath(__DIR__ . DIRECTORY_SEPARATOR . 'tmp' . DIRECTORY_SEPARATOR . $filename);
+    $tmpDir = realpath(__DIR__ . DIRECTORY_SEPARATOR . 'tmp');
+    
+    if (!$tmpPath || !$tmpDir || strpos($tmpPath, $tmpDir) !== 0 || !is_file($tmpPath)) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'error' => 'Fichier tmp introuvable ou non autorisé']);
+        exit;
+    }
+    
+    // Déplacer vers photos
+    $photosDir = __DIR__ . DIRECTORY_SEPARATOR . 'photos';
+    if (!is_dir($photosDir)) {
+        mkdir($photosDir, 0755, true);
+    }
+    
+    $photoPath = $photosDir . DIRECTORY_SEPARATOR . $filename;
+    if (rename($tmpPath, $photoPath)) {
+        echo json_encode([
+            'ok' => true,
+            'message' => 'Photo acceptée et sauvegardée'
+        ]);
+    } else {
+        http_response_code(500);
+        echo json_encode(['ok' => false, 'error' => 'Impossible de déplacer la photo']);
+    }
+    exit;
+}
+
+if ($action === 'reject') {
+    $filename = $input['filename'] ?? '';
+    
+    if (!$filename) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'error' => 'Filename manquant']);
+        exit;
+    }
+    
+    // Sécuriser le chemin (doit être dans tmp)
+    $tmpPath = realpath(__DIR__ . DIRECTORY_SEPARATOR . 'tmp' . DIRECTORY_SEPARATOR . $filename);
+    $tmpDir = realpath(__DIR__ . DIRECTORY_SEPARATOR . 'tmp');
+    
+    if (!$tmpPath || !$tmpDir || strpos($tmpPath, $tmpDir) !== 0 || !is_file($tmpPath)) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'error' => 'Fichier tmp introuvable ou non autorisé']);
+        exit;
+    }
+    
+    // Supprimer le fichier
+    if (unlink($tmpPath)) {
+        echo json_encode([
+            'ok' => true,
+            'message' => 'Photo rejetée et supprimée'
+        ]);
+    } else {
+        http_response_code(500);
+        echo json_encode(['ok' => false, 'error' => 'Impossible de supprimer la photo']);
+    }
     exit;
 }
 
