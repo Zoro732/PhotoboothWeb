@@ -1129,3 +1129,31 @@ body.photo-preview #photoActions {
         bottom: 3%;
     }
 }
+/* Orientation paysage sur tablettes (Xiaomi Pad Se 1344x800)*/
+@media screen and (max-height: 800px) and (orientation: landscape) {
+    #highlandbar {
+        height: 8%;
+        width: 20%;
+        bottom: 4%;
+    }
+    #selector {
+        height: 70%;
+        width: 40%;
+    }
+    #instructionText {
+        font-size: 1.5em;
+        padding-left: 150px;
+    }
+    #logo {
+        left: 75%;
+        top: 90%;
+        width: 100px;
+        height: auto;
+    }
+    #streamWrapper {
+        height: 70vh;
+        width: calc(70vh * 16 / 9);
+    }
+
+}
+
