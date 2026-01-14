@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Photobooth</title>
     <link rel="stylesheet" href="index.css">
     <script src="script.js"></script>
-    <link rel="icon" href="assets/logo_white.png"/>
+    <link rel="icon" href="assets/logo_white.png" />
 </head>
+
 <body>
     <!-- <div id ="cursor"></div>
     <div id ="cursor2"></div> -->
@@ -42,9 +44,16 @@
                 <div id="photoThumbnail"></div>
             </div>
         </div>
-        
+
         <button id="shootBtn">
-            <img src="assets/take_picture.svg" alt="Prendre une photo">
+            <svg id="shootsvg" xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 24 24">
+                <!-- Cercle extérieur -->
+                <circle cx="12" cy="12" r="10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" />
+
+                <!-- Cercle intérieur rempli (rayon 8) -->
+                <circle cx="12" cy="12" r="8" fill="white" />
+            </svg>
         </button>
         <div id="photoActions">
             <button id="rejectPhotoBtn">
@@ -60,7 +69,7 @@
     <div id="gallery">
         <div id="galleryGrid"></div>
     </div>
-    
+
     <!-- Overlay lightbox pour agrandir une photo de la galerie -->
     <div id="lightboxOverlay" style="display:none;">
         <button id="lightboxClose" aria-label="Fermer la photo">
@@ -87,11 +96,10 @@
         </div>
         <!-- L'image clonée sera injectée ici via JS -->
     </div>
-    
+
     <!-- Notification d'impression -->
     <div id="printNotification"></div>
-    
+
 </body>
+
 </html>
-
-

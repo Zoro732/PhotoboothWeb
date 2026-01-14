@@ -528,15 +528,17 @@ function openLightbox(img) {
         overlay.style.display = 'block';
         overlay.appendChild(clone);
         document.body.classList.add('lightbox-open');
-        requestAnimationFrame(() => overlay.classList.add('show'));
-
+        
+        // Forcer un reflow pour que la transition se déclenche
+        clone.offsetHeight;
+        
         // Lancer l'animation vers le centre
-        requestAnimationFrame(() => {
-            clone.style.left = targetLeft + 'px';
-            clone.style.top = targetTop + 'px';
-            clone.style.width = targetW + 'px';
-            clone.style.height = targetH + 'px';
-        });
+        clone.style.left = targetLeft + 'px';
+        clone.style.top = targetTop + 'px';
+        clone.style.width = targetW + 'px';
+        clone.style.height = targetH + 'px';
+        
+        requestAnimationFrame(() => overlay.classList.add('show'));
 
         // Fermeture via bouton
         closeBtn.onclick = () => closeLightbox();
