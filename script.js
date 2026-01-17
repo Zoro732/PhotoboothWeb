@@ -387,6 +387,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.add('gallery-open');
         ensureGalleryLoaded();
     });
+    
+   
 });
 
 // ========== FONCTIONS GALERIE ==========

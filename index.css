@@ -175,6 +175,20 @@ html {
     touch-action: none;
 }
 
+/* Désactiver le surlignage bleu au tap sur mobile */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Sur appareils tactiles, retirer le contour focus visuel au tap */
+@media (hover: none) and (pointer: coarse) {
+    a:focus,
+    button:focus,
+    img#logo:focus {
+        outline: none;
+    }
+}
+
 #main {
     margin: 0;
     padding: 0;
@@ -381,15 +395,14 @@ body.gallery-open #gallery {
 }
 
 #logo {
-    position: absolute;
-    width: 800px;
-    height: 800px;
-    object-view-box: 0 0 24 24 ;
-    left: 79%;
-    top: 92%;
-    border-color: red 3px solid;
-    z-index: 40; /* au-dessus du stream et des overlays */
-    pointer-events: none; /* ne bloque pas les clics */
+    position: fixed;
+    width: 120px;
+    height: 120px;
+    right: 20px;
+    bottom: 20px;
+    z-index: 50; /* au-dessus de tout */
+    pointer-events: auto; /* active les clics */
+    cursor: pointer;
 }
 
 #streamContainer {
@@ -1183,6 +1196,9 @@ body.photo-preview #photoActions {
     #photoThumbnail{
         width: calc(70vh * 16 / 9);
         height: 70vh;
+    }
+    #instructionText {
+      transform : translateX(5%);
     }
 
 }
