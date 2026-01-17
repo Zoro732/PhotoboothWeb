@@ -7,6 +7,7 @@ let tempPhotoFilename = null; // nom du fichier temporaire en cours de traitemen
 
 // ========== GESTION DU STREAM ET CAPTURE ==========
 document.addEventListener('DOMContentLoaded', () => {
+
     // Bouton ouvrir stream
     const openStreamBtn = document.getElementById('openStreamBtn');
     if (openStreamBtn) {
@@ -293,6 +294,9 @@ document.addEventListener('keydown', function(event) {
 
 const GALLERY_BASE_URL = './photos/';
 const GALLERY_LIST_URL = './get_photo.php';
+const GALLERY_THUMB_URL = './thumbnail.php';
+const GALLERY_THUMB_WIDTH = 480; // px, taille suffisante pour les vignettes
+const USE_THUMBNAILS = true; // Mettre à false pour désactiver les thumbnails
 
 // Fonction pour charger la liste des photos avec fallback
 async function fetchPhotoList() {
@@ -399,7 +403,7 @@ function loadGallery() {
         .then(files => {
             currentPhotoCount = files.length;
             console.log('📷 Photos chargées:', files.length);
-            addImagesToGallery(files.map(f => GALLERY_BASE_URL + f));
+            addImagesToGallery(files);
         })
         .catch(err => console.error('Erreur chargement gallery:', err));
 }
@@ -415,12 +419,12 @@ function reloadGallery() {
     fetchPhotoList()
         .then(files => {
             console.log('🔄 Galerie rechargée:', files.length, 'photos');
-            addImagesToGallery(files.map(f => GALLERY_BASE_URL + f));
+            addImagesToGallery(files);
         })
         .catch(err => console.error('Erreur rechargement gallery:', err));
 }
 
-function addImagesToGallery(urls) {
+function addImagesToGallery(filenames) {
     const grid = document.getElementById('galleryGrid');
     if (!grid) return;
     
@@ -431,6 +435,7 @@ function addImagesToGallery(urls) {
                 const img = entry.target;
                 const src = img.getAttribute('data-src');
                 if (src && !img.src) {
+                    console.log('📥 Chargement image:', src);
                     img.src = src;
                     img.removeAttribute('data-src');
                     // Ne plus observer une fois chargée
@@ -444,7 +449,16 @@ function addImagesToGallery(urls) {
         threshold: 0.01
     });
     
-    urls.forEach(url => {
+    filenames.forEach(file => {
+        const fullUrl = GALLERY_BASE_URL + file;
+        const thumbUrl = USE_THUMBNAILS 
+            ? `${GALLERY_THUMB_URL}?file=${encodeURIComponent(file)}&w=${GALLERY_THUMB_WIDTH}`
+            : fullUrl;
+
+        console.log('🖼️ Ajout image:', file);
+        console.log('   Thumbnail:', thumbUrl);
+        console.log('   Full:', fullUrl);
+
         const item = document.createElement('div');
         item.className = 'gallery-item';
         
@@ -454,11 +468,24 @@ function addImagesToGallery(urls) {
         
         // Créer l'image
         const img = document.createElement('img');
-        img.setAttribute('data-src', url + '?t=' + Date.now()); // Cache busting
+        img.setAttribute('data-src', thumbUrl);
+        img.dataset.fullSrc = fullUrl;
+        img.loading = 'lazy';
+        img.decoding = 'async';
         
         // Masquer le loader quand l'image est chargée
         img.addEventListener('load', function() {
             this.classList.add('loaded');
+        });
+        
+        // En cas d'erreur, essayer l'image originale
+        img.addEventListener('error', function() {
+            console.warn('Erreur chargement thumbnail, fallback vers image originale:', file);
+            if (this.src !== fullUrl && this.src.includes('thumbnail.php')) {
+                this.src = fullUrl;
+            } else {
+                this.classList.add('loaded'); // Masquer le loader même en cas d'erreur
+            }
         });
         
         item.appendChild(img);
@@ -487,7 +514,7 @@ function openLightbox(img) {
     if (!overlay || !closeBtn) return;
 
     // Conserver le chemin de l'image affichée pour l'impression
-    const rawSrc = img.src || img.getAttribute('data-src');
+    const rawSrc = img.dataset.fullSrc || img.src || img.getAttribute('data-src');
     currentLightboxPhoto = normalizePhotoPath(rawSrc);
     overlay.dataset.photo = currentLightboxPhoto;
 
@@ -497,6 +524,7 @@ function openLightbox(img) {
     const tempImg = new Image();
     tempImg.onload = () => {
         const clone = img.cloneNode();
+        clone.src = rawSrc; // forcer la version HD dans la lightbox
         clone.classList.add('zooming-image');
         clone.removeAttribute('data-src');
         clone.style.left = rect.left + 'px';
@@ -656,7 +684,7 @@ function openLightbox(img) {
         }
     };
     
-    tempImg.src = img.src || img.getAttribute('data-src');
+    tempImg.src = rawSrc;
 }
 
 function closeLightbox() {

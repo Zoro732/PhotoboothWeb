@@ -1179,6 +1179,10 @@ body.photo-preview #photoActions {
         height: 70vh;
         width: calc(70vh * 16 / 9);
     }
+    #photoThumbnail{
+        width: calc(70vh * 16 / 9);
+        height: 70vh;
+    }
 
 }
 
