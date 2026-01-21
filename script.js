@@ -8,33 +8,30 @@ let tempPhotoFilename = null; // nom du fichier temporaire en cours de traitemen
 // ========== FONCTION COUNTDOWN ==========
 function startCountdown(overlayElement) {
     return new Promise((resolve) => {
+        console.log('⏰ Démarrage du countdown');
         const numbers = [5, 4, 3, 2, 1];
         let currentIndex = 0;
         
         function showNumber() {
             if (currentIndex >= numbers.length) {
+                console.log('⏰ Countdown terminé');
                 overlayElement.textContent = '';
-                overlayElement.classList.remove('show', 'shrink');
-                overlayElement.style.display = 'none';
+                overlayElement.classList.remove('show');
                 resolve();
                 return;
             }
             
             const num = numbers[currentIndex];
-            overlayElement.style.display = 'flex';
+            console.log('⏰ Affichage:', num);
             overlayElement.textContent = num;
-            overlayElement.classList.remove('shrink');
             overlayElement.classList.add('show');
+            overlayElement.classList.remove('shrink');
             
             // Forcer le reflow pour redémarrer l'animation
             void overlayElement.offsetWidth;
             
-            // Petit délai avant d'ajouter shrink pour s'assurer que le navigateur traite le changement
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    overlayElement.classList.add('shrink');
-                });
-            });
+            // Ajouter la classe shrink pour l'animation
+            overlayElement.classList.add('shrink');
             
             currentIndex++;
             setTimeout(showNumber, 1000);
@@ -91,7 +88,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Bouton prendre une photo
     const shootBtn = document.getElementById('shootBtn');
     if (shootBtn) {
-        shootBtn.addEventListener('click', async function() {
+        shootBtn.addEventListener('click', async function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            console.log('🎬 Bouton shoot cliqué');
+            
             const flashOverlay = document.getElementById('flashOverlay');
             const countdownOverlay = document.getElementById('countdownOverlay');
             const stream = document.getElementById('stream');
@@ -106,6 +108,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Désactiver le bouton pendant le countdown
             shootBtn.disabled = true;
+            shootBtn.style.pointerEvents = 'none';
+            
+            console.log('🎬 Lancement du countdown...');
             
             // Lancer le countdown de 5 secondes
             await startCountdown(countdownOverlay);
@@ -182,8 +187,14 @@ document.addEventListener('DOMContentLoaded', () => {
             } finally {
                 // Réactiver le bouton après la capture
                 shootBtn.disabled = false;
+                shootBtn.style.pointerEvents = 'auto';
             }
         });
+        
+        // Ajouter aussi un listener pour les événements tactiles
+        shootBtn.addEventListener('touchstart', function(event) {
+            event.preventDefault();
+        }, { passive: false });
     }
     
     // Bouton refuser (X)
