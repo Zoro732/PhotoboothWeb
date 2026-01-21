@@ -174,7 +174,7 @@ if (shootBtn) {
             if (!capturedImage || capturedImage === 'data:image/jpeg;base64,') {
                 capturedImage = `url('${stream.src}')`;
             }
-            showDebugNotification('✅ Image capturée!', 1500
+            showDebugNotification('✅ Image capturée!', 1500);
             console.log('✅ Image capturée avec succès');
             
             setTimeout(() => {
@@ -218,7 +218,6 @@ if (shootBtn) {
             }, 200);
             
         } catch (err) {
-            showDebugNotification('❌ Erreur capture: ' + err.message, 3000);
             console.error('❌ Erreur capture:', err);
             setTimeout(() => {
                 flashOverlay.style.opacity = '0';
@@ -229,7 +228,8 @@ if (shootBtn) {
             setTimeout(() => {
                 shootBtn.disabled = false;
                 shootBtn.style.pointerEvents = 'auto';
-                showDebugNotification('✅ Bouton réactivé', 1000);
+                shootBtn.style.opacity = '1';
+                console.log('✅ Bouton réactivé');
             }, 1000);
         }
     }
@@ -239,30 +239,24 @@ if (shootBtn) {
     
     shootBtn.addEventListener('touchstart', function(event) {
         touchStartTime = Date.now();
-        showDebugNotification('👆 Touch start', 800);
+        console.log('👆 Touch start détecté');
     }, { passive: true });
     
     shootBtn.addEventListener('touchend', function(event) {
         const touchDuration = Date.now() - touchStartTime;
-        showDebugNotification(`👆 Touch end (${touchDuration}ms)`, 1000);
+        console.log('👆 Touch end détecté, durée:', touchDuration, 'ms');
         
         // Ignorer si c'était un swipe (touch trop long)
         if (touchDuration < 500) {
             handleCapture(event);
-        } else {
-            showDebugNotification('⚠️ Touch trop long (swipe)', 1500);
         }
     }, { passive: false });
     
     // Garder le click pour les souris/desktop
     shootBtn.addEventListener('click', function(event) {
         // Vérifier qu'il ne s'agit pas d'un événement synthétique après touch
-        if (event.detail === 0) {
-            showDebugNotification('⚠️ Event synthétique ignoré', 1000);
-            return;
-        }
+        if (event.detail === 0) return; // Événement synthétique, ignorer
         
-        showDebugNotification('🖱️ Click détecté', 1000
         console.log('🖱️ Click détecté');
         handleCapture(event);
     });
