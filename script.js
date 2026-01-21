@@ -93,116 +93,155 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Bouton prendre une photo
-    const shootBtn = document.getElementById('shootBtn');
-    if (shootBtn) {
-        shootBtn.addEventListener('click', async function(event) {
-            event.preventDefault();
-            event.stopPropagation();
+const shootBtn = document.getElementById('shootBtn');
+if (shootBtn) {
+    // SUPPRIMER CE CODE PROBLÉMATIQUE :
+    // shootBtn.addEventListener('touchstart', function(event) {
+    //     event.preventDefault();
+    // }, { passive: false });
+    
+    // Fonction commune pour gérer la capture
+    async function handleCapture(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        console.log('🎬 Bouton shoot déclenché');
+        
+        const flashOverlay = document.getElementById('flashOverlay');
+        const countdownOverlay = document.getElementById('countdownOverlay');
+        const stream = document.getElementById('stream');
+        const canvas = document.getElementById('captureCanvas');
+        const thumbnail = document.getElementById('photoThumbnail');
+        const statusEl = document.getElementById('status');
+        
+        if (!stream || !canvas || !thumbnail || !flashOverlay || !countdownOverlay) {
+            console.error('Éléments manquants pour la capture');
+            return;
+        }
+        
+        // Vérifier si un countdown est déjà en cours
+        if (shootBtn.disabled) {
+            console.log('⏰ Countdown déjà en cours, ignorer');
+            return;
+        }
+        
+        // Désactiver le bouton pendant le countdown
+        shootBtn.disabled = true;
+        shootBtn.style.pointerEvents = 'none';
+        shootBtn.style.opacity = '0.5';
+        
+        console.log('🎬 Lancement du countdown...');
+        
+        // Lancer le countdown de 5 secondes
+        await startCountdown(countdownOverlay);
+        
+        console.log('📸 Capture de la photo...');
+        
+        // Effet de flash blanc immédiat
+        flashOverlay.style.opacity = '1';
+        
+        try {
+            const ctx = canvas.getContext('2d');
             
-            console.log('🎬 Bouton shoot cliqué');
+            // Capturer la frame actuelle dans le canvas
+            canvas.width = stream.naturalWidth || stream.width || 1280;
+            canvas.height = stream.naturalHeight || stream.height || 720;
             
-            const flashOverlay = document.getElementById('flashOverlay');
-            const countdownOverlay = document.getElementById('countdownOverlay');
-            const stream = document.getElementById('stream');
-            const canvas = document.getElementById('captureCanvas');
-            const thumbnail = document.getElementById('photoThumbnail');
-            const statusEl = document.getElementById('status');
+            // Dessiner l'image
+            ctx.drawImage(stream, 0, 0, canvas.width, canvas.height);
+            let capturedImage = canvas.toDataURL('image/jpeg', 0.95);
             
-            if (!stream || !canvas || !thumbnail || !flashOverlay || !countdownOverlay) {
-                console.error('Éléments manquants pour la capture');
-                return;
+            // Si le canvas est vide (CORS), utiliser directement l'URL du stream
+            if (!capturedImage || capturedImage === 'data:image/jpeg;base64,') {
+                capturedImage = `url('${stream.src}')`;
             }
             
-            // Désactiver le bouton pendant le countdown
-            shootBtn.disabled = true;
-            shootBtn.style.pointerEvents = 'none';
+            console.log('✅ Image capturée avec succès');
             
-            console.log('🎬 Lancement du countdown...');
-            
-            // Lancer le countdown de 5 secondes
-            await startCountdown(countdownOverlay);
-            
-            console.log('Capture de la photo...');
-            
-            // Effet de flash blanc immédiat
-            flashOverlay.style.opacity = '1';
-            
-            try {
-                const ctx = canvas.getContext('2d');
+            setTimeout(() => {
+                flashOverlay.style.opacity = '0';
                 
-                // Capturer la frame actuelle dans le canvas
-                canvas.width = stream.naturalWidth || stream.width || 1280;
-                canvas.height = stream.naturalHeight || stream.height || 720;
-                
-                // Essayer de dessiner l'image
-                ctx.drawImage(stream, 0, 0, canvas.width, canvas.height);
-                let capturedImage = canvas.toDataURL('image/jpeg', 0.95);
-                
-                // Si le canvas est vide (CORS), utiliser directement l'URL du stream
-                if (!capturedImage || capturedImage === 'data:image/jpeg;base64,') {
-                    capturedImage = `url('${stream.src}')`;
-                }
-                
-                console.log('Image capturée avec succès');
-                
+                // Après le flash, afficher la prévisualisation et morphing des boutons
                 setTimeout(() => {
-                    flashOverlay.style.opacity = '0';
-                    
-                    // Après le flash, afficher la prévisualisation et morphing des boutons
-                    setTimeout(() => {
-                        if (typeof capturedImage === 'string' && capturedImage.startsWith('url(')) {
-                            thumbnail.style.backgroundImage = capturedImage;
-                        } else {
-                            thumbnail.style.backgroundImage = `url(${capturedImage})`;
-                        }
-                        // Rendre le thumbnail visible
-                        thumbnail.classList.add('show');
-                        // Activer le mode preview avec morphing
-                        document.body.classList.add('photo-preview');
-                        // Déclencher la prise de vue sur le serveur (RPI)
-                        fetch('command.php', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'capture' })
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.ok) {
-                                tempPhotoFilename = data.filename;
-                                if (statusEl) {
-                                    statusEl.textContent = 'Photo capturée, en attente de validation...';
-                                }
-                            } else {
-                                if (statusEl) {
-                                    statusEl.textContent = 'Erreur capture: ' + (data.error || 'Inconnue');
-                                }
+                    if (typeof capturedImage === 'string' && capturedImage.startsWith('url(')) {
+                        thumbnail.style.backgroundImage = capturedImage;
+                    } else {
+                        thumbnail.style.backgroundImage = `url(${capturedImage})`;
+                    }
+                    // Rendre le thumbnail visible
+                    thumbnail.classList.add('show');
+                    // Activer le mode preview avec morphing
+                    document.body.classList.add('photo-preview');
+                    // Déclencher la prise de vue sur le serveur (RPI)
+                    fetch('command.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'capture' })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.ok) {
+                            tempPhotoFilename = data.filename;
+                            if (statusEl) {
+                                statusEl.textContent = 'Photo capturée, en attente de validation...';
                             }
-                        })
-                        .catch(err => {
-                            console.error('Erreur capture serveur:', err);
-                            if (statusEl) statusEl.textContent = 'Erreur : ' + err.message;
-                        });
-                    }, 100);
-                }, 0);
-                
-            } catch (err) {
-                console.error('Erreur capture:', err);
-                setTimeout(() => {
-                    flashOverlay.style.opacity = '0';
-                    alert('Impossible de capturer l\'image. Vérifiez que le serveur de stream est accessible.');
-                }, 150);
-            } finally {
-                // Réactiver le bouton après la capture
+                        } else {
+                            if (statusEl) {
+                                statusEl.textContent = 'Erreur capture: ' + (data.error || 'Inconnue');
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Erreur capture serveur:', err);
+                        if (statusEl) statusEl.textContent = 'Erreur : ' + err.message;
+                    });
+                }, 100);
+            }, 200);
+            
+        } catch (err) {
+            console.error('❌ Erreur capture:', err);
+            setTimeout(() => {
+                flashOverlay.style.opacity = '0';
+                alert('Impossible de capturer l\'image. Vérifiez que le serveur de stream est accessible.');
+            }, 150);
+        } finally {
+            // Réactiver le bouton après TOUT le processus
+            setTimeout(() => {
                 shootBtn.disabled = false;
                 shootBtn.style.pointerEvents = 'auto';
-            }
-        });
-        
-        // Ajouter aussi un listener pour les événements tactiles
-        shootBtn.addEventListener('touchstart', function(event) {
-            event.preventDefault();
-        }, { passive: false });
+                shootBtn.style.opacity = '1';
+                console.log('✅ Bouton réactivé');
+            }, 1000);
+        }
     }
+    
+    // Utiliser touchend au lieu de click pour le tactile
+    let touchStartTime = 0;
+    
+    shootBtn.addEventListener('touchstart', function(event) {
+        touchStartTime = Date.now();
+        console.log('👆 Touch start détecté');
+    }, { passive: true });
+    
+    shootBtn.addEventListener('touchend', function(event) {
+        const touchDuration = Date.now() - touchStartTime;
+        console.log('👆 Touch end détecté, durée:', touchDuration, 'ms');
+        
+        // Ignorer si c'était un swipe (touch trop long)
+        if (touchDuration < 500) {
+            handleCapture(event);
+        }
+    }, { passive: false });
+    
+    // Garder le click pour les souris/desktop
+    shootBtn.addEventListener('click', function(event) {
+        // Vérifier qu'il ne s'agit pas d'un événement synthétique après touch
+        if (event.detail === 0) return; // Événement synthétique, ignorer
+        
+        console.log('🖱️ Click détecté');
+        handleCapture(event);
+    });
+}
     
     // Bouton refuser (X)
     const rejectPhotoBtn = document.getElementById('rejectPhotoBtn');
