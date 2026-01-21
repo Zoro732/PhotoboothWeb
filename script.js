@@ -9,6 +9,9 @@ let tempPhotoFilename = null; // nom du fichier temporaire en cours de traitemen
 function startCountdown(overlayElement) {
     return new Promise((resolve) => {
         console.log('⏰ Démarrage du countdown');
+        console.log('⏰ Element:', overlayElement);
+        console.log('⏰ Parent:', overlayElement.parentElement);
+        
         const numbers = [5, 4, 3, 2, 1];
         let currentIndex = 0;
         
@@ -16,22 +19,26 @@ function startCountdown(overlayElement) {
             if (currentIndex >= numbers.length) {
                 console.log('⏰ Countdown terminé');
                 overlayElement.textContent = '';
-                overlayElement.classList.remove('show');
+                overlayElement.classList.remove('show', 'shrink');
+                overlayElement.style.display = 'none';
                 resolve();
                 return;
             }
             
             const num = numbers[currentIndex];
             console.log('⏰ Affichage:', num);
+            overlayElement.style.display = 'flex';
             overlayElement.textContent = num;
-            overlayElement.classList.add('show');
             overlayElement.classList.remove('shrink');
+            overlayElement.classList.add('show');
             
             // Forcer le reflow pour redémarrer l'animation
             void overlayElement.offsetWidth;
             
             // Ajouter la classe shrink pour l'animation
-            overlayElement.classList.add('shrink');
+            setTimeout(() => {
+                overlayElement.classList.add('shrink');
+            }, 50);
             
             currentIndex++;
             setTimeout(showNumber, 1000);
