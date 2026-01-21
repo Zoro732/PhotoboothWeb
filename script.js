@@ -5,10 +5,31 @@ var touchendY = 0;
 let currentLightboxPhoto = null; // chemin normalisé de l'image ouverte en lightbox
 let tempPhotoFilename = null; // nom du fichier temporaire en cours de traitement
 
+// ========== FONCTION NOTIFICATION DEBUG ==========
+function showDebugNotification(message, duration = 2000) {
+    const notification = document.getElementById('printNotification');
+    if (!notification) {
+        console.log('⚠️ Notification element not found');
+        return;
+    }
+    
+    console.log(message); // Garder aussi dans la console
+    
+    notification.textContent = message;
+    notification.classList.remove('hide');
+    notification.classList.add('show');
+    
+    // Auto-hide après le délai
+    setTimeout(() => {
+        notification.classList.remove('show');
+        notification.classList.add('hide');
+    }, duration);
+}
+
 // ========== FONCTION COUNTDOWN ==========
 function startCountdown(overlayElement) {
     return new Promise((resolve) => {
-        console.log('⏰ Démarrage du countdown');
+        showDebugNotification('⏰ Démarrage countdown', 1000);
         console.log('⏰ Element:', overlayElement);
         console.log('⏰ Parent:', overlayElement.parentElement);
         
@@ -17,7 +38,7 @@ function startCountdown(overlayElement) {
         
         function showNumber() {
             if (currentIndex >= numbers.length) {
-                console.log('⏰ Countdown terminé');
+                showDebugNotification('⏰ Countdown terminé!', 1000);
                 overlayElement.textContent = '';
                 overlayElement.classList.remove('show', 'shrink');
                 overlayElement.style.display = 'none';
@@ -26,7 +47,7 @@ function startCountdown(overlayElement) {
             }
             
             const num = numbers[currentIndex];
-            console.log('⏰ Affichage:', num);
+            showDebugNotification(`⏰ Countdown: ${num}`, 800);
             overlayElement.style.display = 'flex';
             overlayElement.textContent = num;
             overlayElement.classList.remove('shrink');
@@ -95,17 +116,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Bouton prendre une photo
 const shootBtn = document.getElementById('shootBtn');
 if (shootBtn) {
-    // SUPPRIMER CE CODE PROBLÉMATIQUE :
-    // shootBtn.addEventListener('touchstart', function(event) {
-    //     event.preventDefault();
-    // }, { passive: false });
+
     
     // Fonction commune pour gérer la capture
     async function handleCapture(event) {
         event.preventDefault();
         event.stopPropagation();
         
-        console.log('🎬 Bouton shoot déclenché');
+        showDebugNotification('🎬 Bouton shoot déclenché', 1500);
         
         const flashOverlay = document.getElementById('flashOverlay');
         const countdownOverlay = document.getElementById('countdownOverlay');
@@ -115,13 +133,14 @@ if (shootBtn) {
         const statusEl = document.getElementById('status');
         
         if (!stream || !canvas || !thumbnail || !flashOverlay || !countdownOverlay) {
+            showDebugNotification('❌ Éléments manquants!', 3000);
             console.error('Éléments manquants pour la capture');
             return;
         }
         
         // Vérifier si un countdown est déjà en cours
         if (shootBtn.disabled) {
-            console.log('⏰ Countdown déjà en cours, ignorer');
+            showDebugNotification('⏰ Countdown déjà en cours', 1500);
             return;
         }
         
@@ -130,12 +149,12 @@ if (shootBtn) {
         shootBtn.style.pointerEvents = 'none';
         shootBtn.style.opacity = '0.5';
         
-        console.log('🎬 Lancement du countdown...');
+        showDebugNotification('🎬 Lancement countdown...', 1500);
         
         // Lancer le countdown de 5 secondes
         await startCountdown(countdownOverlay);
         
-        console.log('📸 Capture de la photo...');
+        showDebugNotification('📸 Capture photo...', 1500);
         
         // Effet de flash blanc immédiat
         flashOverlay.style.opacity = '1';
@@ -144,8 +163,8 @@ if (shootBtn) {
             const ctx = canvas.getContext('2d');
             
             // Capturer la frame actuelle dans le canvas
-            canvas.width = stream.naturalWidth || stream.width || 1280;
-            canvas.height = stream.naturalHeight || stream.height || 720;
+            canvas.width = stream.naturalWidth || stream.width || 640;
+            canvas.height = stream.naturalHeight || stream.height || 480;
             
             // Dessiner l'image
             ctx.drawImage(stream, 0, 0, canvas.width, canvas.height);
@@ -155,7 +174,7 @@ if (shootBtn) {
             if (!capturedImage || capturedImage === 'data:image/jpeg;base64,') {
                 capturedImage = `url('${stream.src}')`;
             }
-            
+            showDebugNotification('✅ Image capturée!', 1500
             console.log('✅ Image capturée avec succès');
             
             setTimeout(() => {
@@ -199,6 +218,7 @@ if (shootBtn) {
             }, 200);
             
         } catch (err) {
+            showDebugNotification('❌ Erreur capture: ' + err.message, 3000);
             console.error('❌ Erreur capture:', err);
             setTimeout(() => {
                 flashOverlay.style.opacity = '0';
@@ -209,8 +229,7 @@ if (shootBtn) {
             setTimeout(() => {
                 shootBtn.disabled = false;
                 shootBtn.style.pointerEvents = 'auto';
-                shootBtn.style.opacity = '1';
-                console.log('✅ Bouton réactivé');
+                showDebugNotification('✅ Bouton réactivé', 1000);
             }, 1000);
         }
     }
@@ -220,24 +239,30 @@ if (shootBtn) {
     
     shootBtn.addEventListener('touchstart', function(event) {
         touchStartTime = Date.now();
-        console.log('👆 Touch start détecté');
+        showDebugNotification('👆 Touch start', 800);
     }, { passive: true });
     
     shootBtn.addEventListener('touchend', function(event) {
         const touchDuration = Date.now() - touchStartTime;
-        console.log('👆 Touch end détecté, durée:', touchDuration, 'ms');
+        showDebugNotification(`👆 Touch end (${touchDuration}ms)`, 1000);
         
         // Ignorer si c'était un swipe (touch trop long)
         if (touchDuration < 500) {
             handleCapture(event);
+        } else {
+            showDebugNotification('⚠️ Touch trop long (swipe)', 1500);
         }
     }, { passive: false });
     
     // Garder le click pour les souris/desktop
     shootBtn.addEventListener('click', function(event) {
         // Vérifier qu'il ne s'agit pas d'un événement synthétique après touch
-        if (event.detail === 0) return; // Événement synthétique, ignorer
+        if (event.detail === 0) {
+            showDebugNotification('⚠️ Event synthétique ignoré', 1000);
+            return;
+        }
         
+        showDebugNotification('🖱️ Click détecté', 1000
         console.log('🖱️ Click détecté');
         handleCapture(event);
     });
