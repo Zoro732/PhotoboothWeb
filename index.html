@@ -11,8 +11,6 @@
 </head>
 
 <body>
-    <!-- <div id ="cursor"></div>
-    <div id ="cursor2"></div> -->
     <div id="highlandbar">
         <div id="selector"></div>
         <div id="mainPageBtn">
@@ -40,6 +38,7 @@
             <div id="streamWrapper">
                 <img src="http://192.168.1.20:8080/stream" id="stream" crossorigin="anonymous">
                 <div id="flashOverlay"></div>
+                <div id="countdownOverlay"></div>
                 <canvas id="captureCanvas" style="display:none;"></canvas>
                 <div id="photoThumbnail"></div>
             </div>
@@ -50,7 +49,6 @@
                 <!-- Cercle extérieur -->
                 <circle cx="12" cy="12" r="10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"
                     stroke-linejoin="round" />
-
                 <!-- Cercle intérieur rempli (rayon 8) -->
                 <circle cx="12" cy="12" r="8" fill="white" />
             </svg>

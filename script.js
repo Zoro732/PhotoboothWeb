@@ -5,6 +5,39 @@ var touchendY = 0;
 let currentLightboxPhoto = null; // chemin normalisé de l'image ouverte en lightbox
 let tempPhotoFilename = null; // nom du fichier temporaire en cours de traitement
 
+// ========== FONCTION COUNTDOWN ==========
+function startCountdown(overlayElement) {
+    return new Promise((resolve) => {
+        const numbers = [5, 4, 3, 2, 1];
+        let currentIndex = 0;
+        
+        function showNumber() {
+            if (currentIndex >= numbers.length) {
+                overlayElement.textContent = '';
+                overlayElement.classList.remove('show');
+                resolve();
+                return;
+            }
+            
+            const num = numbers[currentIndex];
+            overlayElement.textContent = num;
+            overlayElement.classList.add('show');
+            overlayElement.classList.remove('shrink');
+            
+            // Forcer le reflow pour redémarrer l'animation
+            void overlayElement.offsetWidth;
+            
+            // Ajouter la classe shrink pour l'animation
+            overlayElement.classList.add('shrink');
+            
+            currentIndex++;
+            setTimeout(showNumber, 1000);
+        }
+        
+        showNumber();
+    });
+}
+
 // ========== GESTION DU STREAM ET CAPTURE ==========
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -54,15 +87,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (shootBtn) {
         shootBtn.addEventListener('click', async function() {
             const flashOverlay = document.getElementById('flashOverlay');
+            const countdownOverlay = document.getElementById('countdownOverlay');
             const stream = document.getElementById('stream');
             const canvas = document.getElementById('captureCanvas');
             const thumbnail = document.getElementById('photoThumbnail');
             const statusEl = document.getElementById('status');
             
-            if (!stream || !canvas || !thumbnail || !flashOverlay) {
+            if (!stream || !canvas || !thumbnail || !flashOverlay || !countdownOverlay) {
                 console.error('Éléments manquants pour la capture');
                 return;
             }
+            
+            // Désactiver le bouton pendant le countdown
+            shootBtn.disabled = true;
+            
+            // Lancer le countdown de 5 secondes
+            await startCountdown(countdownOverlay);
             
             console.log('Capture de la photo...');
             
@@ -133,6 +173,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     flashOverlay.style.opacity = '0';
                     alert('Impossible de capturer l\'image. Vérifiez que le serveur de stream est accessible.');
                 }, 150);
+            } finally {
+                // Réactiver le bouton après la capture
+                shootBtn.disabled = false;
             }
         });
     }
@@ -539,10 +582,10 @@ function openLightbox(img) {
         const vh = window.innerHeight;
         const realRatio = tempImg.naturalWidth / tempImg.naturalHeight;
         
-        let targetW = Math.min(vw * 0.9, vh * 0.9 * realRatio);
+        let targetW = Math.min(vw * 0.8, vh * 0.8 * realRatio);
         let targetH = targetW / realRatio;
-        if (targetH > vh * 0.9) {
-            targetH = vh * 0.9;
+        if (targetH > vh * 0.8) {
+            targetH = vh * 0.8;
             targetW = targetH * realRatio;
         }
         const targetLeft = (vw - targetW) / 2;
