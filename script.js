@@ -14,21 +14,27 @@ function startCountdown(overlayElement) {
         function showNumber() {
             if (currentIndex >= numbers.length) {
                 overlayElement.textContent = '';
-                overlayElement.classList.remove('show');
+                overlayElement.classList.remove('show', 'shrink');
+                overlayElement.style.display = 'none';
                 resolve();
                 return;
             }
             
             const num = numbers[currentIndex];
+            overlayElement.style.display = 'flex';
             overlayElement.textContent = num;
-            overlayElement.classList.add('show');
             overlayElement.classList.remove('shrink');
+            overlayElement.classList.add('show');
             
             // Forcer le reflow pour redémarrer l'animation
             void overlayElement.offsetWidth;
             
-            // Ajouter la classe shrink pour l'animation
-            overlayElement.classList.add('shrink');
+            // Petit délai avant d'ajouter shrink pour s'assurer que le navigateur traite le changement
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    overlayElement.classList.add('shrink');
+                });
+            });
             
             currentIndex++;
             setTimeout(showNumber, 1000);
@@ -165,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (statusEl) statusEl.textContent = 'Erreur : ' + err.message;
                         });
                     }, 100);
-                }, 150);
+                }, 0);
                 
             } catch (err) {
                 console.error('Erreur capture:', err);
