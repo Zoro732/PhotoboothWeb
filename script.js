@@ -143,14 +143,14 @@ if (shootBtn) {
             console.error('Éléments manquants:', missing);
             return;
         }
-        
-       
-     
-        
+
+        shootBtn.disabled = true;
+        shootBtn.style.pointerEvents = 'none';
+        shootBtn.style.opacity = '0.5';
+        console.log('✅ Bouton désactivé pour capture');
         
         // Lancer le countdown de 5 secondes
         await startCountdown(countdownOverlay);
-        
         
         // Effet de flash blanc immédiat
         flashOverlay.style.opacity = '1';
@@ -197,18 +197,12 @@ if (shootBtn) {
                     .then(data => {
                         if (data.ok) {
                             tempPhotoFilename = data.filename;
-                            if (statusEl) {
-                                statusEl.textContent = 'Photo capturée, en attente de validation...';
-                            }
                         } else {
-                            if (statusEl) {
-                                statusEl.textContent = 'Erreur capture: ' + (data.error || 'Inconnue');
-                            }
+                            console.error('Erreur serveur capture:', data.error);
                         }
                     })
                     .catch(err => {
                         console.error('Erreur capture serveur:', err);
-                        if (statusEl) statusEl.textContent = 'Erreur : ' + err.message;
                     });
                 }, 100);
             }, 200);
@@ -219,15 +213,8 @@ if (shootBtn) {
                 flashOverlay.style.opacity = '0';
                 alert('Impossible de capturer l\'image. Vérifiez que le serveur de stream est accessible.');
             }, 150);
-        } finally {
-            // Réactiver le bouton après TOUT le processus
-            setTimeout(() => {
-                shootBtn.disabled = false;
-                shootBtn.style.pointerEvents = 'auto';
-                shootBtn.style.opacity = '1';
-                console.log('✅ Bouton réactivé');
-            }, 1000);
-        }
+        } 
+        
     }
     
     // Utiliser touchend au lieu de click pour le tactile
@@ -252,7 +239,6 @@ if (shootBtn) {
     shootBtn.addEventListener('click', function(event) {
         // Vérifier qu'il ne s'agit pas d'un événement synthétique après touch
         if (event.detail === 0) return; // Événement synthétique, ignorer
-        
         console.log('🖱️ Click détecté');
         handleCapture(event);
     });
@@ -263,7 +249,6 @@ if (shootBtn) {
     if (rejectPhotoBtn) {
         rejectPhotoBtn.addEventListener('click', function() {
             const thumbnail = document.getElementById('photoThumbnail');
-            const statusEl = document.getElementById('status');
             
             // Si une photo temp existe, la supprimer
             if (tempPhotoFilename) {
@@ -277,9 +262,7 @@ if (shootBtn) {
                 })
                 .then(res => res.json())
                 .then(data => {
-                    if (statusEl) {
-                        statusEl.textContent = data.ok ? 'Photo rejetée' : ('Erreur: ' + data.error);
-                    }
+                    console.log(data.ok ? 'Photo rejetée' : ('Erreur: ' + data.error));
                 })
                 .catch(err => console.error('Erreur reject:', err))
                 .finally(() => {
@@ -290,6 +273,11 @@ if (shootBtn) {
             // Retirer le mode preview
             document.body.classList.remove('photo-preview');
             if (thumbnail) thumbnail.classList.remove('show');
+
+            shootBtn.disabled = false;
+            shootBtn.style.pointerEvents = 'auto';
+            shootBtn.style.opacity = '1';
+            console.log('✅ Bouton réactivé');
             
             // Nettoyer
             if (thumbnail) {
@@ -308,13 +296,9 @@ if (shootBtn) {
     if (acceptPhotoBtn) {
         acceptPhotoBtn.addEventListener('click', function() {
             const thumbnail = document.getElementById('photoThumbnail');
-            const statusEl = document.getElementById('status');
             
             if (!thumbnail || !tempPhotoFilename) return;
             
-            // Afficher un message
-            if (statusEl) statusEl.textContent = "Validation de la photo...";
-
             // Déplacer la photo du tmp vers photos
             fetch('command.php', {
                 method: 'POST',
@@ -326,13 +310,10 @@ if (shootBtn) {
             })
                 .then(response => response.json())
                 .then(data => {
-                    if (statusEl) {
-                        statusEl.textContent = data.ok ? "Photo acceptée !" : ("Erreur : " + (data.error || 'Inconnue'));
-                    }
+                   console.log(data.ok ? "Photo acceptée !" : ("Erreur : " + (data.error || 'Inconnue')));
                 })
                 .catch(err => {
                     console.error('Erreur accept:', err);
-                    if (statusEl) statusEl.textContent = "Erreur : " + err.message;
                 })
                 .finally(() => {
                     tempPhotoFilename = null;
@@ -351,6 +332,13 @@ if (shootBtn) {
                     if (url) URL.revokeObjectURL(url);
                 }
                 thumbnail.style.backgroundImage = '';
+
+                shootBtn.disabled = false;
+                shootBtn.style.pointerEvents = 'auto';
+                shootBtn.style.opacity = '1';
+                console.log('✅ Bouton réactivé');
+
+
             }, 1000);
         });
     }
