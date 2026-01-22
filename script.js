@@ -146,9 +146,9 @@ if (shootBtn) {
 
         shootBtn.disabled = true;
         shootBtn.style.pointerEvents = 'none';
-        shootBtn.style.opacity = '0.5';
+        shootBtn.style.opacity = '0';
         console.log('✅ Bouton désactivé pour capture');
-        
+
         // Lancer le countdown de 5 secondes
         await startCountdown(countdownOverlay);
         
