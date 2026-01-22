@@ -132,9 +132,17 @@ if (shootBtn) {
         const thumbnail = document.getElementById('photoThumbnail');
         const statusEl = document.getElementById('status');
         
-        if (!stream || !canvas || !thumbnail || !flashOverlay || !countdownOverlay) {
-            showDebugNotification('❌ Éléments manquants!', 3000);
-            console.error('Éléments manquants pour la capture');
+        // Vérifier quels éléments manquent
+        const missing = [];
+        if (!stream) missing.push('stream');
+        if (!canvas) missing.push('canvas');
+        if (!thumbnail) missing.push('thumbnail');
+        if (!flashOverlay) missing.push('flashOverlay');
+        if (!countdownOverlay) missing.push('countdownOverlay');
+        
+        if (missing.length > 0) {
+            showDebugNotification('❌ Manquant: ' + missing.join(', '), 5000);
+            console.error('Éléments manquants:', missing);
             return;
         }
         
