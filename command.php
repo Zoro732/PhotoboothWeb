@@ -1,5 +1,6 @@
 <?php
 // Point d'entrée unique : capture et impression
+date_default_timezone_set('Europe/Paris');
 header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

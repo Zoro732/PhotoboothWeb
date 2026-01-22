@@ -275,7 +275,6 @@ document.addEventListener('DOMContentLoaded', () => {
             shootBtn.disabled = false;
             shootBtn.style.pointerEvents = 'auto';
             shootBtn.style.opacity = '1';
-            closeStreamBtn = document.getElementById('lightboxClose');
             if (closeStreamBtn) {
                 closeStreamBtn.style.pointerEvents = 'auto';
                 closeStreamBtn.style.opacity = '1';
@@ -340,7 +339,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 shootBtn.disabled = false;
                 shootBtn.style.pointerEvents = 'auto';
                 shootBtn.style.opacity = '1';
-                closeStreamBtn = document.getElementById('lightboxClose');
             if (closeStreamBtn) {
                 closeStreamBtn.style.pointerEvents = 'auto';
                 closeStreamBtn.style.opacity = '1';
