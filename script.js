@@ -123,14 +123,12 @@ if (shootBtn) {
         event.preventDefault();
         event.stopPropagation();
         
-        showDebugNotification('🎬 Bouton shoot déclenché', 1500);
         
         const flashOverlay = document.getElementById('flashOverlay');
         const countdownOverlay = document.getElementById('countdownOverlay');
         const stream = document.getElementById('stream');
         const canvas = document.getElementById('captureCanvas');
         const thumbnail = document.getElementById('photoThumbnail');
-        const statusEl = document.getElementById('status');
         
         // Vérifier quels éléments manquent
         const missing = [];
@@ -146,23 +144,13 @@ if (shootBtn) {
             return;
         }
         
-        // Vérifier si un countdown est déjà en cours
-        if (shootBtn.disabled) {
-            showDebugNotification('⏰ Countdown déjà en cours', 1500);
-            return;
-        }
+       
+     
         
-        // Désactiver le bouton pendant le countdown
-        shootBtn.disabled = true;
-        shootBtn.style.pointerEvents = 'none';
-        shootBtn.style.opacity = '0.5';
-        
-        showDebugNotification('🎬 Lancement countdown...', 1500);
         
         // Lancer le countdown de 5 secondes
         await startCountdown(countdownOverlay);
         
-        showDebugNotification('📸 Capture photo...', 1500);
         
         // Effet de flash blanc immédiat
         flashOverlay.style.opacity = '1';
