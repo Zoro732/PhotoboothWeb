@@ -142,10 +142,10 @@ document.addEventListener('DOMContentLoaded', () => {
             shootBtn.disabled = true;
             shootBtn.style.pointerEvents = 'none';
             shootBtn.style.opacity = '0';
-            lightboxCloseBtn = document.getElementById('lightboxClose');
-            if (lightboxCloseBtn) {
-                lightboxCloseBtn.style.pointerEvents = 'none';
-                lightboxCloseBtn.style.opacity = '0';
+            closeStreamBtn = document.getElementById('lightboxClose');
+            if (closeStreamBtn) {
+                closeStreamBtn.style.pointerEvents = 'none';
+                closeStreamBtn.style.opacity = '0';
             }
             console.log('✅ Bouton désactivé pour capture');
 
@@ -276,10 +276,10 @@ document.addEventListener('DOMContentLoaded', () => {
             shootBtn.disabled = false;
             shootBtn.style.pointerEvents = 'auto';
             shootBtn.style.opacity = '1';
-            lightboxCloseBtn = document.getElementById('lightboxClose');
-            if (lightboxCloseBtn) {
-                lightboxCloseBtn.style.pointerEvents = 'auto';
-                lightboxCloseBtn.style.opacity = '1';
+            closeStreamBtn = document.getElementById('lightboxClose');
+            if (closeStreamBtn) {
+                closeStreamBtn.style.pointerEvents = 'auto';
+                closeStreamBtn.style.opacity = '1';
             }
             console.log('✅ Bouton réactivé');
 
@@ -341,10 +341,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 shootBtn.disabled = false;
                 shootBtn.style.pointerEvents = 'auto';
                 shootBtn.style.opacity = '1';
-                lightboxCloseBtn = document.getElementById('lightboxClose');
-            if (lightboxCloseBtn) {
-                lightboxCloseBtn.style.pointerEvents = 'auto';
-                lightboxCloseBtn.style.opacity = '1';
+                closeStreamBtn = document.getElementById('lightboxClose');
+            if (closeStreamBtn) {
+                closeStreamBtn.style.pointerEvents = 'auto';
+                closeStreamBtn.style.opacity = '1';
             }
                 console.log('✅ Bouton réactivé');
 
