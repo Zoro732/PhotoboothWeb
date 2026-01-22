@@ -142,6 +142,11 @@ document.addEventListener('DOMContentLoaded', () => {
             shootBtn.disabled = true;
             shootBtn.style.pointerEvents = 'none';
             shootBtn.style.opacity = '0';
+            lightboxCloseBtn = document.getElementById('lightboxClose');
+            if (lightboxCloseBtn) {
+                lightboxCloseBtn.style.pointerEvents = 'none';
+                lightboxCloseBtn.style.opacity = '0';
+            }
             console.log('✅ Bouton désactivé pour capture');
 
             // Lancer le countdown de 5 secondes
@@ -271,7 +276,13 @@ document.addEventListener('DOMContentLoaded', () => {
             shootBtn.disabled = false;
             shootBtn.style.pointerEvents = 'auto';
             shootBtn.style.opacity = '1';
+            lightboxCloseBtn = document.getElementById('lightboxClose');
+            if (lightboxCloseBtn) {
+                lightboxCloseBtn.style.pointerEvents = 'auto';
+                lightboxCloseBtn.style.opacity = '1';
+            }
             console.log('✅ Bouton réactivé');
+
 
             // Nettoyer
             if (thumbnail) {
@@ -330,6 +341,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 shootBtn.disabled = false;
                 shootBtn.style.pointerEvents = 'auto';
                 shootBtn.style.opacity = '1';
+                lightboxCloseBtn = document.getElementById('lightboxClose');
+            if (lightboxCloseBtn) {
+                lightboxCloseBtn.style.pointerEvents = 'auto';
+                lightboxCloseBtn.style.opacity = '1';
+            }
                 console.log('✅ Bouton réactivé');
 
 
