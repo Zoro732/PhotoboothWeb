@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
             shootBtn.disabled = true;
             shootBtn.style.pointerEvents = 'none';
             shootBtn.style.opacity = '0';
-            closeStreamBtn = document.getElementById('lightboxClose');
+            closeStreamBtn = document.getElementById('closeStreamBtn');
             if (closeStreamBtn) {
                 closeStreamBtn.style.pointerEvents = 'none';
                 closeStreamBtn.style.opacity = '0';
