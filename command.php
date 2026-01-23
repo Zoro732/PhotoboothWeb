@@ -157,16 +157,21 @@ if ($action === 'print') {
         exit;
     }
 
-    // Construire la commande avec ou sans template
+    // Construire la commande: photo [template] [copies]
+    // Le script attend: photo template copies
+    // Mais template peut être omis, donc on passe d'abord la photo
     if ($template !== null) {
+        // Template fourni: photo template copies
+        $templatePath = __DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . $template . '.png';
         $cmd = sprintf(
-            'sudo %s %s %d %d 2>&1',
+            'sudo %s %s %s %d 2>&1',
             escapeshellarg($scriptPath),
             escapeshellarg($photoPath),
-            $copies,
-            $template
+            escapeshellarg($templatePath),
+            $copies
         );
     } else {
+        // Pas de template: photo copies (le script gère ce cas)
         $cmd = sprintf(
             'sudo %s %s %d 2>&1',
             escapeshellarg($scriptPath),
