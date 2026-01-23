@@ -653,12 +653,16 @@ function refreshTemplateRefs() {
 const isTemplateActive = () => templateElements.some(t => t && t.style.visibility === 'visible');
 
 function showTemplate(idx) {
+    if (typeof idx === 'number') {
+        templateIndex = idx;
+    }
     if (!templateOverlay) refreshTemplateRefs();
     const zoomingImage = templateOverlay ? templateOverlay.querySelector('.zooming-image') : null;
     if (!zoomingImage || templateElements.length === 0) return;
 
     const align = () => {
         const rect = zoomingImage.getBoundingClientRect();
+        const activeIdx = templateIndex;
         templateElements.forEach((tpl, i) => {
             if (!tpl) return;
             tpl.style.left = rect.left + 'px';
@@ -666,13 +670,13 @@ function showTemplate(idx) {
             tpl.style.width = rect.width + 'px';
             tpl.style.height = rect.height + 'px';
             tpl.style.display = 'block';
-            const isActive = i === idx;
+            const isActive = i === activeIdx;
             tpl.style.visibility = isActive ? 'visible' : 'hidden';
             tpl.style.opacity = isActive ? '1' : '0';
         });
         templateButtons.forEach((btn, i) => {
             if (!btn) return;
-            if (i === idx) {
+            if (i === activeIdx) {
                 btn.classList.add('active');
             } else {
                 btn.classList.remove('active');
@@ -682,6 +686,15 @@ function showTemplate(idx) {
 
     align();
     requestAnimationFrame(align); // réalignement après reflow/transition
+
+    if (!zoomingImage.dataset.templateAlignListener) {
+        zoomingImage.addEventListener('transitionend', () => {
+            if (!isTemplateActive()) return;
+            align();
+            requestAnimationFrame(align);
+        });
+        zoomingImage.dataset.templateAlignListener = '1';
+    }
 }
 
 function changeTemplate(direction) {
@@ -879,6 +892,12 @@ function openLightbox(img) {
                         return;
                     }
 
+                    // Déterminer le template sélectionné (si actif)
+                    let selectedTemplate = null;
+                    if (isTemplateActive()) {
+                        selectedTemplate = templateIndex + 1; // 1, 2, ou 3
+                    }
+
                     // Appel serveur pour lancer l'impression via print_photo.sh
                     fetch('command.php', {
                         method: 'POST',
@@ -886,7 +905,8 @@ function openLightbox(img) {
                         body: JSON.stringify({
                             action: 'print',
                             photo: currentLightboxPhoto,
-                            copies: printQuantity
+                            copies: printQuantity,
+                            template: selectedTemplate
                         })
                     })
                         .then(res => res.json())

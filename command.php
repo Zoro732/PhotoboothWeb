@@ -124,8 +124,15 @@ if ($action === 'reject') {
 if ($action === 'print') {
     $photo = $input['photo'] ?? '';
     $copies = isset($input['copies']) ? (int)$input['copies'] : 1;
+    $template = isset($input['template']) ? (int)$input['template'] : null;
+    
     if ($copies < 1) $copies = 1;
     if ($copies > 3) $copies = 3;
+    
+    // Valider le numéro de template (1, 2, 3 ou null)
+    if ($template !== null && ($template < 1 || $template > 3)) {
+        $template = null;
+    }
 
     if (!$photo) {
         http_response_code(400);
@@ -150,12 +157,23 @@ if ($action === 'print') {
         exit;
     }
 
-    $cmd = sprintf(
-        'sudo %s %s %d 2>&1',
-        escapeshellarg($scriptPath),
-        escapeshellarg($photoPath),
-        $copies
-    );
+    // Construire la commande avec ou sans template
+    if ($template !== null) {
+        $cmd = sprintf(
+            'sudo %s %s %d %d 2>&1',
+            escapeshellarg($scriptPath),
+            escapeshellarg($photoPath),
+            $copies,
+            $template
+        );
+    } else {
+        $cmd = sprintf(
+            'sudo %s %s %d 2>&1',
+            escapeshellarg($scriptPath),
+            escapeshellarg($photoPath),
+            $copies
+        );
+    }
 
     $output = shell_exec($cmd);
     if ($output === null) {
