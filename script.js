@@ -743,15 +743,23 @@ function openLightbox(img) {
                         return;
                     }
 
+                    // Préparer les données d'impression
+                    const printData = {
+                        action: 'print',
+                        photo: currentLightboxPhoto,
+                        copies: printQuantity
+                    };
+                    
+                    // Ajouter le template si un est sélectionné
+                    if (selectedTemplate !== null && templates.length > 0) {
+                        printData.template = templates[selectedTemplate];
+                    }
+
                     // Appel serveur pour lancer l'impression via print_photo.sh
                     fetch('command.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            action: 'print',
-                            photo: currentLightboxPhoto,
-                            copies: printQuantity
-                        })
+                        body: JSON.stringify(printData)
                     })
                         .then(res => res.json())
                         .then(data => {
@@ -852,3 +860,179 @@ function normalizePhotoPath(src) {
         return src.split('?')[0];
     }
 }
+
+// ========== GESTION DES TEMPLATES ==========
+let selectedTemplate = null;
+let templates = [];
+let templateSwipeStart = 0;
+let templateSwipeHandlers = null;
+
+async function loadTemplates() {
+    try {
+        const response = await fetch('./assets/templates/index.json', { cache: 'no-store' });
+        if (!response.ok) throw new Error('Impossible de charger les templates');
+        
+        const data = await response.json();
+        templates = (data.templates || []).map(name => './assets/templates/' + name);
+        
+        console.log('✅ Templates chargés:', templates.length, templates);
+    } catch (err) {
+        console.error('❌ Erreur chargement templates:', err);
+        templates = [];
+    }
+}
+
+function enterTemplateMode() {
+    if (templates.length === 0) {
+        console.log('⚠️ Pas de templates chargés');
+        loadTemplates().then(() => {
+            if (templates.length > 0) enterTemplateMode();
+        });
+        return;
+    }
+    
+    const templateMode = document.getElementById('templateMode');
+    const carousel = document.getElementById('templateCarousel');
+    const lightboxPrint = document.getElementById('lightboxPrint');
+    const lightboxClose = document.getElementById('lightboxClose');
+    const lightboxTemplate = document.getElementById('lightboxTemplate');
+    
+    if (!templateMode || !carousel) {
+        console.error('❌ Elements manquants:', { templateMode: !!templateMode, carousel: !!carousel });
+        return;
+    }
+    
+    console.log('📋 Entrée en mode template avec', templates.length, 'templates');
+    
+    // Vider le carousel
+    carousel.innerHTML = '';
+    selectedTemplate = 0;
+    
+    // Créer les conteneurs de templates
+    templates.forEach((templateSrc, index) => {
+        const container = document.createElement('div');
+        container.className = 'template-container';
+        if (index === 0) container.classList.add('active');
+        
+        const img = document.createElement('img');
+        img.src = templateSrc;
+        img.className = 'template-image';
+        img.alt = `Template ${index + 1}`;
+        img.style.pointerEvents = 'none';
+        
+        container.appendChild(img);
+        carousel.appendChild(container);
+        console.log(`Template ${index + 1} créé: ${templateSrc}`);
+    });
+    
+    // Afficher le mode template
+    templateMode.classList.add('active');
+    lightboxPrint.style.display = 'none';
+    lightboxClose.style.display = 'none';
+    lightboxTemplate.style.display = 'none';
+    
+    console.log('✅ Mode template activé');
+}
+
+function handleTemplateSwipeStart(e) {
+    const templateMode = document.getElementById('templateMode');
+    if (!templateMode || !templateMode.classList.contains('active')) return;
+    templateSwipeStart = e.touches[0].clientX;
+    console.log('👆 Template swipe start:', templateSwipeStart);
+}
+
+function handleTemplateSwipeEnd(e) {
+    const templateMode = document.getElementById('templateMode');
+    if (!templateMode || !templateMode.classList.contains('active')) return;
+    
+    const swipeEnd = e.changedTouches[0].clientX;
+    const diff = templateSwipeStart - swipeEnd;
+    const threshold = 50;
+    
+    console.log('👆 Template swipe end:', swipeEnd, 'diff:', diff);
+    
+    if (Math.abs(diff) > threshold) {
+        if (diff > 0) {
+            // Swipe gauche -> template suivant
+            console.log('➡️ Swipe gauche - template suivant');
+            changeTemplate(1);
+        } else {
+            // Swipe droite -> template précédent
+            console.log('⬅️ Swipe droite - template précédent');
+            changeTemplate(-1);
+        }
+    }
+}
+
+function changeTemplate(direction) {
+    const containers = document.querySelectorAll('.template-container');
+    if (containers.length === 0) {
+        console.error('❌ Aucun conteneur de template trouvé');
+        return;
+    }
+    
+    console.log(`Changement de template: ${selectedTemplate} + ${direction}`);
+    
+    // Retirer la classe active du template actuel
+    containers[selectedTemplate].classList.remove('active');
+    containers[selectedTemplate].classList.add(direction > 0 ? 'prev' : 'next');
+    
+    // Calculer le nouvel index
+    selectedTemplate += direction;
+    
+    // Boucler
+    if (selectedTemplate < 0) {
+        selectedTemplate = templates.length - 1;
+    } else if (selectedTemplate >= templates.length) {
+        selectedTemplate = 0;
+    }
+    
+    // Retirer les classes prev/next
+    setTimeout(() => {
+        containers.forEach(c => {
+            c.classList.remove('prev', 'next');
+        });
+    }, 400);
+    
+    // Ajouter la classe active au nouveau template
+    containers[selectedTemplate].classList.add('active');
+    
+    console.log(`✅ Template ${selectedTemplate + 1} sélectionné`);
+}
+
+function exitTemplateMode() {
+    const templateMode = document.getElementById('templateMode');
+    const lightboxPrint = document.getElementById('lightboxPrint');
+    const lightboxClose = document.getElementById('lightboxClose');
+    const lightboxTemplate = document.getElementById('lightboxTemplate');
+    
+    if (!templateMode) return;
+    
+    console.log('🚪 Sortie du mode template');
+    
+    templateMode.classList.remove('active');
+    lightboxPrint.style.display = 'flex';
+    lightboxClose.style.display = 'flex';
+    lightboxTemplate.style.display = 'flex';
+    
+    selectedTemplate = null;
+}
+
+// Initialiser le bouton template dans la lightbox
+document.addEventListener('DOMContentLoaded', () => {
+    const templateBtn = document.getElementById('lightboxTemplate');
+    if (templateBtn) {
+        templateBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            console.log('🖱️ Bouton template cliqué');
+            enterTemplateMode();
+        });
+    }
+    
+    // Ajouter les event listeners pour les swipes sur les templates
+    document.addEventListener('touchstart', handleTemplateSwipeStart, { passive: true });
+    document.addEventListener('touchend', handleTemplateSwipeEnd, { passive: false });
+    
+    // Charger les templates au démarrage
+    loadTemplates();
+});

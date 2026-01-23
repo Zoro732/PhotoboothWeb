@@ -76,6 +76,9 @@
         <button id="lightboxPrint" aria-label="Imprimer la photo">
             <img src="assets/printer.svg" alt="Imprimer">
         </button>
+        <button id="lightboxTemplate" aria-label="Ajouter un template" title="Templates">
+            <img src="assets/sparkles.svg" alt="Templates">
+        </button>
         <div id="printQuantityPanel" style="display:none;">
             <div id="printValidateWrapper">
                 <button id="printValidate" aria-label="Valider l'impression">
@@ -91,6 +94,10 @@
                     <span>−</span>
                 </button>
             </div>
+        </div>
+        <!-- Container pour le mode template -->
+        <div id="templateMode" style="display:none;">
+            <div id="templateCarousel"></div>
         </div>
         <!-- L'image clonée sera injectée ici via JS -->
     </div>

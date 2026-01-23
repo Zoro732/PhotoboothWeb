@@ -126,6 +126,7 @@ if ($action === 'print') {
     $copies = isset($input['copies']) ? (int)$input['copies'] : 1;
     if ($copies < 1) $copies = 1;
     if ($copies > 3) $copies = 3;
+    $template = $input['template'] ?? null;
 
     if (!$photo) {
         http_response_code(400);
@@ -142,6 +143,18 @@ if ($action === 'print') {
         exit;
     }
 
+    // Vérifier et sécuriser le template si fourni
+    $templatePath = null;
+    if ($template) {
+        $templatePath = realpath(__DIR__ . DIRECTORY_SEPARATOR . $template);
+        $assetsDir = realpath(__DIR__ . DIRECTORY_SEPARATOR . 'assets');
+        if (!$templatePath || !$assetsDir || strpos($templatePath, $assetsDir) !== 0 || !is_file($templatePath)) {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'error' => 'Template introuvable ou non autorisé']);
+            exit;
+        }
+    }
+
     // Script d'impression local
     $scriptPath = __DIR__ . DIRECTORY_SEPARATOR . 'print_photo.sh';
     if (!is_file($scriptPath)) {
@@ -150,12 +163,23 @@ if ($action === 'print') {
         exit;
     }
 
-    $cmd = sprintf(
-        'sudo %s %s %d 2>&1',
-        escapeshellarg($scriptPath),
-        escapeshellarg($photoPath),
-        $copies
-    );
+    // Construire la commande avec ou sans template
+    if ($templatePath) {
+        $cmd = sprintf(
+            'sudo %s %s %s %d 2>&1',
+            escapeshellarg($scriptPath),
+            escapeshellarg($photoPath),
+            escapeshellarg($templatePath),
+            $copies
+        );
+    } else {
+        $cmd = sprintf(
+            'sudo %s %s %d 2>&1',
+            escapeshellarg($scriptPath),
+            escapeshellarg($photoPath),
+            $copies
+        );
+    }
 
     $output = shell_exec($cmd);
     if ($output === null) {
