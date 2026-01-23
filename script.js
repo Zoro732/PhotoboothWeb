@@ -492,6 +492,9 @@ function checkForNewPhotos() {
 document.addEventListener('DOMContentLoaded', () => {
     startPolling();
 
+    // Initialiser les listeners du mode template une seule fois
+    attachTemplateListeners();
+
     // Gestion des clics sur les boutons de navigation
     document.getElementById('mainPageBtn').addEventListener('click', function () {
         console.log('Click sur Accueil - fermeture gallery');
@@ -623,6 +626,139 @@ function addImagesToGallery(filenames) {
             openLightbox(img);
         });
     });
+}
+
+// ====== Templates (overlay mode) ======
+let templateIndex = 0;
+let templateSwipeStart = null;
+let templateElements = [];
+let templateSelection = null;
+let templateButtons = [];
+let templateModeButton = null;
+let templateOverlay = null;
+let templateListenersAttached = false;
+
+function refreshTemplateRefs() {
+    templateElements = [
+        document.getElementById('template1'),
+        document.getElementById('template2'),
+        document.getElementById('template3')
+    ].filter(Boolean);
+    templateSelection = document.getElementById('template_selection');
+    templateButtons = templateSelection ? Array.from(templateSelection.querySelectorAll('.template_option')) : [];
+    templateModeButton = document.getElementById('template_mode');
+    templateOverlay = document.getElementById('lightboxOverlay');
+}
+
+const isTemplateActive = () => templateElements.some(t => t && t.style.visibility === 'visible');
+
+function showTemplate(idx) {
+    if (!templateOverlay) refreshTemplateRefs();
+    const zoomingImage = templateOverlay ? templateOverlay.querySelector('.zooming-image') : null;
+    if (!zoomingImage || templateElements.length === 0) return;
+
+    const align = () => {
+        const rect = zoomingImage.getBoundingClientRect();
+        templateElements.forEach((tpl, i) => {
+            if (!tpl) return;
+            tpl.style.left = rect.left + 'px';
+            tpl.style.top = rect.top + 'px';
+            tpl.style.width = rect.width + 'px';
+            tpl.style.height = rect.height + 'px';
+            tpl.style.display = 'block';
+            const isActive = i === idx;
+            tpl.style.visibility = isActive ? 'visible' : 'hidden';
+            tpl.style.opacity = isActive ? '1' : '0';
+        });
+        templateButtons.forEach((btn, i) => {
+            if (!btn) return;
+            if (i === idx) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    };
+
+    align();
+    requestAnimationFrame(align); // réalignement après reflow/transition
+}
+
+function changeTemplate(direction) {
+    if (templateElements.length === 0) return;
+    templateIndex = (templateIndex + direction + templateElements.length) % templateElements.length;
+    showTemplate(templateIndex);
+}
+
+function handleTemplateTouchStart(e) {
+    if (!isTemplateActive()) return;
+    if (!e.touches || e.touches.length === 0) return;
+    templateSwipeStart = e.touches[0].clientX;
+}
+
+function handleTemplateTouchEnd(e) {
+    if (!isTemplateActive() || templateSwipeStart === null) return;
+    if (!e.changedTouches || e.changedTouches.length === 0) return;
+    const diff = templateSwipeStart - e.changedTouches[0].clientX;
+    const threshold = 40;
+    if (Math.abs(diff) > threshold) {
+        changeTemplate(diff > 0 ? 1 : -1);
+    }
+    templateSwipeStart = null;
+}
+
+function attachTemplateListeners() {
+    if (templateListenersAttached) return;
+    refreshTemplateRefs();
+
+    // Recalage des templates sur resize
+    window.addEventListener('resize', () => {
+        if (isTemplateActive()) {
+            showTemplate(templateIndex);
+        }
+    });
+
+    if (templateModeButton) {
+        templateModeButton.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            if (templateElements.length === 0) return;
+
+            if (isTemplateActive()) {
+                // Toggle off: cacher templates et panneau
+                templateElements.forEach(t => {
+                    if (t) {
+                        t.style.opacity = '0';
+                        t.style.visibility = 'hidden';
+                    }
+                });
+                if (templateSelection) templateSelection.style.display = 'none';
+                templateButtons.forEach(b => b.classList.remove('active'));
+                return;
+            }
+
+            // Toggle on: afficher premier template et panneau
+            templateIndex = 0;
+            showTemplate(templateIndex);
+            if (templateSelection) templateSelection.style.display = 'flex';
+        });
+    }
+
+    if (templateSelection && templateElements.length > 0) {
+        templateButtons.forEach((btn, idx) => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                templateIndex = idx;
+                showTemplate(templateIndex);
+            });
+        });
+    }
+
+    if (templateOverlay) {
+        templateOverlay.addEventListener('touchstart', handleTemplateTouchStart, { passive: true });
+        templateOverlay.addEventListener('touchend', handleTemplateTouchEnd, { passive: true });
+    }
+
+    templateListenersAttached = true;
 }
 
 // ====== LIGHTBOX (zoom animé depuis la grille) ======
@@ -812,6 +948,22 @@ function closeLightbox() {
 
     // Fermer le panel d'impression
     if (printPanel) printPanel.style.display = 'none';
+
+    // Masquer les templates superposés et le panneau de sélection
+    const tplToHide = [document.getElementById('template1'), document.getElementById('template2'), document.getElementById('template3')];
+    tplToHide.forEach(t => {
+        if (t) {
+            t.style.opacity = '0';
+            t.style.visibility = 'hidden';
+        }
+    });
+    const tplSelection = document.getElementById('template_selection');
+    if (tplSelection) {
+        tplSelection.style.display = 'none';
+        const buttons = tplSelection.querySelectorAll('.template_option');
+        buttons.forEach(btn => btn.classList.remove('active'));
+    }
+
     currentLightboxPhoto = null;
     delete overlay.dataset.photo;
 
