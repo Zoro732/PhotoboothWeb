@@ -27,7 +27,7 @@ function showDebugNotification(message, duration = 2000) {
 }
 
 // ========== FONCTION COUNTDOWN ==========
-function startCountdown(overlayElement) {
+function startCountdown(overlayElement, onCaptureTrigger = null) {
     return new Promise((resolve) => {
         console.log('⏰ Element:', overlayElement);
         console.log('⏰ Parent:', overlayElement.parentElement);
@@ -57,6 +57,12 @@ function startCountdown(overlayElement) {
             setTimeout(() => {
                 overlayElement.classList.add('shrink');
             }, 50);
+
+            // Déclencher la capture 1 seconde avant la fin (quand on affiche "1")
+            if (num === 2 && onCaptureTrigger) {
+                console.log('📸 Déclenchement capture 1 seconde avant la fin');
+                onCaptureTrigger();
+            }
 
             currentIndex++;
             setTimeout(showNumber, 1000);
@@ -148,71 +154,73 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             console.log('✅ Bouton désactivé pour capture');
 
-            // Lancer le countdown de 5 secondes
-            await startCountdown(countdownOverlay);
+            // Fonction déclenchée quand il faut capturer (1 seconde avant la fin du décompte)
+            const triggerCapture = async () => {
+                // Effet de flash blanc immédiat
+                flashOverlay.style.opacity = '1';
 
-            // Effet de flash blanc immédiat
-            flashOverlay.style.opacity = '1';
+                try {
+                    const ctx = canvas.getContext('2d');
 
-            try {
-                const ctx = canvas.getContext('2d');
+                    // Capturer la frame actuelle dans le canvas
+                    canvas.width = stream.naturalWidth || stream.width || 640;
+                    canvas.height = stream.naturalHeight || stream.height || 480;
 
-                // Capturer la frame actuelle dans le canvas
-                canvas.width = stream.naturalWidth || stream.width || 640;
-                canvas.height = stream.naturalHeight || stream.height || 480;
+                    // Dessiner l'image
+                    ctx.drawImage(stream, 0, 0, canvas.width, canvas.height);
+                    let capturedImage = canvas.toDataURL('image/jpeg', 0.95);
 
-                // Dessiner l'image
-                ctx.drawImage(stream, 0, 0, canvas.width, canvas.height);
-                let capturedImage = canvas.toDataURL('image/jpeg', 0.95);
+                    // Si le canvas est vide (CORS), utiliser directement l'URL du stream
+                    if (!capturedImage || capturedImage === 'data:image/jpeg;base64,') {
+                        capturedImage = `url('${stream.src}')`;
+                    }
+                    console.log('✅ Image capturée avec succès');
 
-                // Si le canvas est vide (CORS), utiliser directement l'URL du stream
-                if (!capturedImage || capturedImage === 'data:image/jpeg;base64,') {
-                    capturedImage = `url('${stream.src}')`;
-                }
-                console.log('✅ Image capturée avec succès');
-
-                setTimeout(() => {
-                    flashOverlay.style.opacity = '0';
-
-                    // Après le flash, afficher la prévisualisation et morphing des boutons
                     setTimeout(() => {
-                        if (typeof capturedImage === 'string' && capturedImage.startsWith('url(')) {
-                            thumbnail.style.backgroundImage = capturedImage;
-                        } else {
-                            thumbnail.style.backgroundImage = `url(${capturedImage})`;
-                        }
-                        // Rendre le thumbnail visible
-                        thumbnail.classList.add('show');
-                        // Activer le mode preview avec morphing
-                        document.body.classList.add('photo-preview');
-                        // Déclencher la prise de vue sur le serveur (RPI)
-                        fetch('command.php', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'capture' })
-                        })
-                            .then(res => res.json())
-                            .then(data => {
-                                if (data.ok) {
-                                    tempPhotoFilename = data.filename;
-                                } else {
-                                    console.error('Erreur serveur capture:', data.error);
-                                }
+                        flashOverlay.style.opacity = '0';
+
+                        // Après le flash, afficher la prévisualisation et morphing des boutons
+                        setTimeout(() => {
+                            if (typeof capturedImage === 'string' && capturedImage.startsWith('url(')) {
+                                thumbnail.style.backgroundImage = capturedImage;
+                            } else {
+                                thumbnail.style.backgroundImage = `url(${capturedImage})`;
+                            }
+                            // Rendre le thumbnail visible
+                            thumbnail.classList.add('show');
+                            // Activer le mode preview avec morphing
+                            document.body.classList.add('photo-preview');
+                            // Déclencher la prise de vue sur le serveur (RPI)
+                            fetch('command.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ action: 'capture' })
                             })
-                            .catch(err => {
-                                console.error('Erreur capture serveur:', err);
-                            });
-                    }, 100);
-                }, 200);
+                                .then(res => res.json())
+                                .then(data => {
+                                    if (data.ok) {
+                                        tempPhotoFilename = data.filename;
+                                    } else {
+                                        console.error('Erreur serveur capture:', data.error);
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error('Erreur capture serveur:', err);
+                                });
+                        }, 100);
+                    }, 200);
 
-            } catch (err) {
-                console.error('❌ Erreur capture:', err);
-                setTimeout(() => {
-                    flashOverlay.style.opacity = '0';
-                    alert('Impossible de capturer l\'image. Vérifiez que le serveur de stream est accessible.');
-                }, 150);
-            }
+                } catch (err) {
+                    console.error('❌ Erreur capture:', err);
+                    setTimeout(() => {
+                        flashOverlay.style.opacity = '0';
+                        alert('Impossible de capturer l\'image. Vérifiez que le serveur de stream est accessible.');
+                    }, 150);
+                }
+            };
 
+            // Lancer le countdown de 5 secondes avec le callback de capture
+            await startCountdown(countdownOverlay, triggerCapture);
         }
 
         // Utiliser touchend au lieu de click pour le tactile
